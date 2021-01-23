@@ -1,0 +1,16 @@
+{
+  "name": "json-rpc-dual-engine",
+  "version": "0.1.0",
+  "description": "JSON-RPC-2.0 client and server protocol-agnostic engine.",
+  "type": "module",
+  "main": "index.js",
+  "author": "Leonardo Raele <leonardoraele@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1"
+  }
+}

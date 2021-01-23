@@ -1,0 +1,4 @@
+- Handle errors
+- Implement timeout for client call responses
+- Support middlewares
+- Make tests
