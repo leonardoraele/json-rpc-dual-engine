@@ -1,10 +1,8 @@
-import chai from 'chai';
-import JsonRpcClient from '../client.js';
-import JsonRpcServer from '../server.js';
-import JsonRpcStream from '../stream.js';
-import stream from 'stream';
-
-const { expect } = chai;
+const { expect } = require('chai');
+const JsonRpcClient = require('../client.js');
+const JsonRpcServer = require('../server.js');
+const JsonRpcStream = require('../stream.js');
+const stream = require('stream');
 
 describe('stream', function()
 {

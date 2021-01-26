@@ -1,1 +1,1 @@
-export { default } from './lib/json-rpc-server.js';
+module.exports = require('./lib/json-rpc-server.js');

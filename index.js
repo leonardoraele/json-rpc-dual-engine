@@ -1,1 +1,1 @@
-export { default } from './lib/json-rpc-dual-engine.js';
+module.exports = require('./lib/json-rpc-dual-engine.js');

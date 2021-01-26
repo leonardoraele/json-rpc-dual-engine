@@ -1,7 +1,5 @@
-import chai from 'chai';
-import JsonRpcClient from '../client.js';
-
-const { expect } = chai;
+const { expect } = require('chai');
+const JsonRpcClient = require('../client.js');
 
 describe('client', function()
 {

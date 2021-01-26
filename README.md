@@ -3,7 +3,7 @@
 ## Server
 
 ```js
-import JsonRpcServer from 'json-rpc-dual-engine/server';
+const JsonRpcServer = require('json-rpc-dual-engine/server');
 
 const server = JsonRpcServer();
 
@@ -19,7 +19,7 @@ server.accept('{"jsonrpc": "2.0", "method": "multiply", "params": [7, 11], "id":
 ## Client
 
 ```js
-import JsonRpcClient from 'json-rpc-dual-engine/client';
+const JsonRpcClient = require('json-rpc-dual-engine/client');
 
 const client = JsonRpcClient();
 
@@ -33,7 +33,7 @@ console.log(result); // Output: 77
 ### Using the RPC Proxy Object
 
 ```js
-import JsonRpcClient from 'json-rpc-dual-engine/client';
+const JsonRpcClient = require('json-rpc-dual-engine/client');
 
 const client = JsonRpcClient();
 const rpc = client.remote;
@@ -48,7 +48,7 @@ console.log(result); // Output: 77
 ## Server and Client
 
 ```js
-import JsonRpcDualEngine from 'json-rpc-dual-engine';
+const JsonRpcDualEngine = require('json-rpc-dual-engine');
 
 const engine = JsonRpcDualEngine();
 
@@ -65,7 +65,7 @@ console.log(result); // Output: 77
 ## WebSocket Example (client and server)
 
 ```js
-import JsonRpcDualEngine from 'json-rpc-dual-engine';
+const JsonRpcDualEngine = require('json-rpc-dual-engine');
 
 const engine = JsonRpcDualEngine();
 const websocket = await new Promise((resolve, reject) =>
