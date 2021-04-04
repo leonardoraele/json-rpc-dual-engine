@@ -1,18 +1,18 @@
 const { expect } = require('chai');
-const JsonRpcClient = require('../client.js');
-const JsonRpcServer = require('../server.js');
-const JsonRpcStream = require('../stream.js');
+const { JsonRpcClient, JsonRpcServer, JsonRpcStream, JsonRpcDualEngine } = require('../index.js');
 const stream = require('stream');
 
 describe('stream', function()
 {
 	it('has an accessible `engine` property', function()
 	{
-		expect(JsonRpcStream()).to.have.property('engine');
+		expect(JsonRpcStream(JsonRpcClient())).to.have.property('engine');
+		expect(JsonRpcStream(JsonRpcServer())).to.have.property('engine');
+		expect(JsonRpcStream(JsonRpcDualEngine())).to.have.property('engine');
 	});
 	it('handles remote method calls', function(done)
 	{
-		const stream = JsonRpcStream();
+		const stream = JsonRpcStream(JsonRpcDualEngine());
 		stream.engine.register('ping', () => 'pong');
 		stream.write(JSON.stringify({ jsonrpc: '2.0', method: 'ping', id: '1' }));
 		stream.on('data', data =>
@@ -24,7 +24,7 @@ describe('stream', function()
 	});
 	it('sends remote method calls', async function()
 	{
-		const stream = JsonRpcStream();
+		const stream = JsonRpcStream(JsonRpcDualEngine());
 		const resultPromise = stream.engine.request('ping');
 		stream.write(JSON.stringify({ jsonrpc: '2.0', result: 'pong', id: '1' }));
 		const result = await resultPromise;
