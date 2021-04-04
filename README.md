@@ -171,6 +171,20 @@ const result = await client.engine.request('multiply', [7, 11]);
 console.log(result); // Output: 77
 ```
 
+## Contributing
+
+#### Install
+
+	npm install
+
+#### Test
+
+	npm test
+
+#### Coverage
+
+	npm run coverage
+
 ## LICENSE
 
 [MIT](./LICENSE.md)

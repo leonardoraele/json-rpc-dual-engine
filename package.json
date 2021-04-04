@@ -20,11 +20,13 @@
     "http"
   ],
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "coverage": "nyc --reporter=html npm test"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^8.2.1",
+    "nyc": "^15.1.0",
     "sinon": "^9.2.4"
   }
 }

@@ -142,6 +142,7 @@ describe('server', function()
 			await validateError({ jsonrpc: '2.0', method: null, params: [], id: '1' }, INVALID_MESSAGE, 'method null');
 			await validateError({ jsonrpc: '2.0', method: 'foo', params: null, id: '1' }, INVALID_MESSAGE, 'null prms');
 			await validateError({ jsonrpc: '2.0', method: 'foo', params: [], id: {} }, INVALID_MESSAGE, 'id is an obj');
+			await validateError({ jsonrpc: '2.0', method: 'foo', params: [], id: 1.5 }, INVALID_MESSAGE, 'factor id');
 		});
 		it('server registered method handler throws an error', async function()
 		{
@@ -151,6 +152,17 @@ describe('server', function()
 			expect(response).to.have.property('error');
 			expect(response.error.code).to.equal(-32000);
 			expect(response.error.message).to.be.a('string');
+		});
+		it('receives a request for an unregistered method', async function()
+		{
+			this.server.register('foo', () => 'bar');
+			const successResponse = await this.request({ jsonrpc: '2.0', method: 'foo', id: null });
+			expect(successResponse).to.deep.equal({ jsonrpc: '2.0', result: 'bar', id: null });
+
+			this.server.unregister('foo');
+			const errorResponse = await this.request({ jsonrpc: '2.0', method: 'foo', id: null });
+			expect(errorResponse.error?.code).to.equal(-32601);
+			expect(errorResponse.error?.data?.method).to.equal('foo');
 		});
 	});
 
