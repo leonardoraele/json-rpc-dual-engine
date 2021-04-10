@@ -1,10 +1,14 @@
 {
   "name": "json-rpc-dual-engine",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "JSON-RPC-2.0 client and server protocol-agnostic engine.",
   "main": "index.js",
   "author": "Leonardo Raele <leonardoraele@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leonardoraele/json-rpc-dual-engine"
+  },
   "keywords": [
     "json",
     "rpc",
