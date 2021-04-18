@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const { expect, AssertionError } = require('chai');
 const sinon = require('sinon');
 const JsonRpcServer = require('../server.js');
 
@@ -111,10 +111,39 @@ describe('server', function()
 			const response = await this.request({ jsonrpc: '2.0', method: 'foo', id: 999 });
 			expect(response).to.deep.equal({ jsonrpc: '2.0', result: COMPLEX_OBJECT(), id: 999 });
 		});
+
+		describe('implicit method name detection', function()
+		{
+			it ('function name is used when no explicit method name is passed', async function()
+			{
+				this.server.register(function foo() { return 'value'; });
+				const response = await this.request({ jsonrpc: '2.0', method: 'foo', id: 10 });
+				expect(response).to.deep.equal({ jsonrpc: '2.0', result: 'value', id: 10 });
+			});
+
+			it ('function name is NOT used when explicit method name is passed', async function()
+			{
+				this.server.register('foo', function bar() { return 'value'; });
+
+				const successResponse = await this.request({ jsonrpc: '2.0', method: 'foo', id: 10 });
+				expect(successResponse).to.deep.equal({ jsonrpc: '2.0', result: 'value', id: 10 });
+
+				const errorResponse = await this.request({ jsonrpc: '2.0', method: 'bar', id: 10 });
+				expect(errorResponse?.id).to.equal(10);
+				expect(errorResponse?.error?.code).to.equal(-32601);
+				expect(errorResponse?.result).to.equal(undefined);
+			});
+		});
 	});
 
 	describe('error scenarios', function()
 	{
+		it('fails to register unnabled methods', function()
+		{
+			this.server.register('foo', () => {});
+			this.server.register(function bar() {});
+			expect(() => this.server.register(() => {})).to.throw();
+		});
 		// non-'2.0' jsonrpc; non-string id or method; unnecessary fields; or invalid json message
 		it('receives an invalid jsonrpc call', async function()
 		{
