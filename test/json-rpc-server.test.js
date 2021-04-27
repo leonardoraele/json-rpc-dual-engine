@@ -1,6 +1,10 @@
-const { expect, AssertionError } = require('chai');
+const chai = require('chai');
 const sinon = require('sinon');
 const JsonRpcServer = require('../server.js');
+const chaiMatchPattern = require('chai-match-pattern');
+
+const { expect } = chai;
+chai.use(chaiMatchPattern);
 
 const COMPLEX_OBJECT = () => (
 {
@@ -23,11 +27,11 @@ describe('server', function()
 	{
 		this.server = JsonRpcServer();
 
-		this.request = async message =>
+		this.request = async (...acceptArgs) =>
 		{
 			const responseStr = await new Promise((resolve, reject) =>
 			{
-				this.server.accept(message);
+				this.server.accept(...acceptArgs);
 				this.server.onresponse = resolve;
 			});
 			return JSON.parse(responseStr);
@@ -133,6 +137,39 @@ describe('server', function()
 				expect(errorResponse?.error?.code).to.equal(-32601);
 				expect(errorResponse?.result).to.equal(undefined);
 			});
+		});
+
+		it('accepts a context (thisArg) on request accept', async function()
+		{
+			this.server.register(function getContextData()
+			{
+				return this.data ?? 'undefined';
+			});
+
+			this.server.register(function setContextData(data)
+			{
+				this.data = data;
+			});
+
+			const context = { data: 'foo' };
+
+			// Validate initial values
+			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }))
+				.to.matchPattern("{ result: 'undefined', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }, context))
+				.to.matchPattern("{ result: 'foo', ... }");
+
+			// Change context values
+			expect(await this.request({ jsonrpc: '2.0', method: 'setContextData', params: ['bar'], id: 1 }))
+				.to.matchPattern("{ result: null, ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'setContextData', params: ['baz'], id: 1 }, context))
+				.to.matchPattern("{ result: null, ... }");
+
+			// Validate final values
+			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }))
+				.to.matchPattern("{ result: 'bar', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }, context))
+				.to.matchPattern("{ result: 'baz', ... }");
 		});
 	});
 
