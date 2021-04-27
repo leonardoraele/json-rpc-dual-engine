@@ -141,35 +141,89 @@ describe('server', function()
 
 		it('accepts a context (thisArg) on request accept', async function()
 		{
-			this.server.register(function getContextData()
+			// Register stub getters and setters for properties 'foo' and 'bar'
+			this.server.register(function getFoo()
 			{
-				return this.data ?? 'undefined';
+				return this.foo ?? 'undefined';
 			});
 
-			this.server.register(function setContextData(data)
+			this.server.register(function getBar()
 			{
-				this.data = data;
+				return this.bar ?? 'undefined';
 			});
 
-			const context = { data: 'foo' };
+			this.server.register(function getBaz()
+			{
+				return this.baz ?? 'undefined';
+			});
+
+			this.server.register(function setBaz(value)
+			{
+				this.baz = value;
+			});
+
+			// Set default properties
+			this.server.setProperty('baz', 'default-baz');
+
+			// Setup test contexts
+			const contextA = this.server.createContext();
+			const contextB = this.server.createContext();
+			const customContext = {}; // Custom contexts don't use the engine's default properties
+
+			this.server.setContextProperty(contextA, 'foo', 'fooA');
+			this.server.setContextProperty(contextA, 'bar', 'barA');
+			this.server.setContextProperty(contextB, 'foo', 'fooB');
+			customContext.bar = 'barC';
 
 			// Validate initial values
-			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }))
+			// Default context
+			expect(await this.request({ jsonrpc: '2.0', method: 'getFoo', id: 1 }))
 				.to.matchPattern("{ result: 'undefined', ... }");
-			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }, context))
-				.to.matchPattern("{ result: 'foo', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBar', id: 1 }))
+				.to.matchPattern("{ result: 'undefined', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }))
+				.to.matchPattern("{ result: 'default-baz', ... }");
+			// Context A
+			expect(await this.request({ jsonrpc: '2.0', method: 'getFoo', id: 1 }, contextA))
+				.to.matchPattern("{ result: 'fooA', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBar', id: 1 }, contextA))
+				.to.matchPattern("{ result: 'barA', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }, contextA))
+				.to.matchPattern("{ result: 'default-baz', ... }");
+			// Context B
+			expect(await this.request({ jsonrpc: '2.0', method: 'getFoo', id: 1 }, contextB))
+				.to.matchPattern("{ result: 'fooB', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBar', id: 1 }, contextB))
+				.to.matchPattern("{ result: 'undefined', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }, contextB))
+				.to.matchPattern("{ result: 'default-baz', ... }");
+			// Custom context
+			expect(await this.request({ jsonrpc: '2.0', method: 'getFoo', id: 1 }, customContext))
+				.to.matchPattern("{ result: 'undefined', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBar', id: 1 }, customContext))
+				.to.matchPattern("{ result: 'barC', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }, customContext))
+				.to.matchPattern("{ result: 'undefined', ... }");
 
 			// Change context values
-			expect(await this.request({ jsonrpc: '2.0', method: 'setContextData', params: ['bar'], id: 1 }))
+			expect(await this.request({ jsonrpc: '2.0', method: 'setBaz', params: ['D'], id: 1 }))
 				.to.matchPattern("{ result: null, ... }");
-			expect(await this.request({ jsonrpc: '2.0', method: 'setContextData', params: ['baz'], id: 1 }, context))
+			expect(await this.request({ jsonrpc: '2.0', method: 'setBaz', params: ['A'], id: 1 }, contextA))
+				.to.matchPattern("{ result: null, ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'setBaz', params: ['B'], id: 1 }, contextB))
+				.to.matchPattern("{ result: null, ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'setBaz', params: ['C'], id: 1 }, customContext))
 				.to.matchPattern("{ result: null, ... }");
 
 			// Validate final values
-			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }))
-				.to.matchPattern("{ result: 'bar', ... }");
-			expect(await this.request({ jsonrpc: '2.0', method: 'getContextData', id: 1 }, context))
-				.to.matchPattern("{ result: 'baz', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }))
+				.to.matchPattern("{ result: 'D', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }, contextA))
+				.to.matchPattern("{ result: 'A', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }, contextB))
+				.to.matchPattern("{ result: 'B', ... }");
+			expect(await this.request({ jsonrpc: '2.0', method: 'getBaz', id: 1 }, customContext))
+				.to.matchPattern("{ result: 'C', ... }");
 		});
 	});
 
