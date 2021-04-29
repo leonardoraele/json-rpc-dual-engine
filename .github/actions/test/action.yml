@@ -1,0 +1,19 @@
+name: Test
+description: Run all tests
+runs:
+  using: composite
+  # TODO Add Node.js 10 & 12
+  steps:
+    # Test Node.js 14
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 14
+    - run: npm ci
+    - run: npm test
+
+    # Test Node.js 16
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 16
+    - run: npm ci
+    - run: npm test
