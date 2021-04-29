@@ -13,7 +13,7 @@ describe('stream', function()
 	it('handles remote method calls', function(done)
 	{
 		const stream = JsonRpcStream(JsonRpcDualEngine());
-		stream.engine.registerPublic('ping', () => 'pong');
+		stream.engine.register('ping', () => 'pong');
 		stream.write(JSON.stringify({ jsonrpc: '2.0', method: 'ping', id: '1' }));
 		stream.on('data', data =>
 		{
@@ -37,7 +37,7 @@ describe('stream', function()
 
 		stream.pipeline(server, client, server, () => { throw new Error('Pipeline broke'); });
 
-		server.engine.registerPublic('multiply', (a, b) => a * b);
+		server.engine.register('multiply', (a, b) => a * b);
 		const result = await client.engine.request('multiply', [7, 11]);
 		expect(result).to.equal(77);
 	});

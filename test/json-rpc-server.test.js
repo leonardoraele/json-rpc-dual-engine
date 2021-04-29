@@ -41,14 +41,14 @@ describe('server', function()
 	{
 		it('accepts requests with positional args', async function()
 		{
-			this.server.registerPublic('multiply', (a, b) => a * b);
+			this.server.register('multiply', (a, b) => a * b);
 			const response = await this.request({ jsonrpc: '2.0', method: 'multiply', params: [7, 11], id: '1' });
 			expect(response).to.deep.equal({ jsonrpc: '2.0', result: 77, id: '1' });
 		});
 
 		it('accepts requests with named args', async function()
 		{
-			this.server.registerPublic('nthWord', ({ str, idx }) => str.split(' ')[idx]);
+			this.server.register('nthWord', ({ str, idx }) => str.split(' ')[idx]);
 			const response = await this.request({
 				jsonrpc: '2.0',
 				method: 'nthWord',
@@ -60,7 +60,7 @@ describe('server', function()
 
 		it('accepts requests with no args', async function()
 		{
-			this.server.registerPublic('getData', () => 'some data');
+			this.server.register('getData', () => 'some data');
 			const response = await this.request({ jsonrpc: '2.0', method: 'getData', id: '1' });
 			expect(response).to.deep.equal({ jsonrpc: '2.0', result: 'some data', id: '1' });
 		});
@@ -68,7 +68,7 @@ describe('server', function()
 		it('accepts notifications', function(done)
 		{
 			const stub = sinon.stub();
-			this.server.registerPublic('getData', stub);
+			this.server.register('getData', stub);
 			this.server.onresponse = () => expect.fail('Notification messages should not be responded');
 			this.server.accept({ jsonrpc: '2.0', method: 'getData', params: [1, 2, 3] });
 			setTimeout(
@@ -84,10 +84,10 @@ describe('server', function()
 
 		it('calls the correct method and returns the correct id', async function()
 		{
-			this.server.registerPublic('getOne', () => 1);
-			this.server.registerPublic('getTwo', () => 2);
-			this.server.registerPublic('getThree', () => 3);
-			this.server.registerPublic('getFour', () => 4);
+			this.server.register('getOne', () => 1);
+			this.server.register('getTwo', () => 2);
+			this.server.register('getThree', () => 3);
+			this.server.register('getFour', () => 4);
 
 			expect(await this.request({ jsonrpc: '2.0', method: 'getThree', id: 12345 }))
 				.to.deep.equal({ jsonrpc: '2.0', result: 3, id: 12345 });
@@ -102,7 +102,7 @@ describe('server', function()
 		it('returns null when the method handler has no result', async function()
 		{
 			const stub = sinon.stub().returns(undefined);
-			this.server.registerPublic('foo', stub);
+			this.server.register('foo', stub);
 			const response = await this.request({ jsonrpc: '2.0', method: 'foo', params: ['bar'], id: 'example_id' });
 			expect(stub.calledOnce).to.be.true;
 			expect(response).to.deep.equal({ jsonrpc: '2.0', result: null, id: 'example_id' });
@@ -110,7 +110,7 @@ describe('server', function()
 
 		it('returns a complex object', async function()
 		{
-			this.server.registerPublic('foo', () => COMPLEX_OBJECT());
+			this.server.register('foo', () => COMPLEX_OBJECT());
 			const response = await this.request({ jsonrpc: '2.0', method: 'foo', id: 999 });
 			expect(response).to.deep.equal({ jsonrpc: '2.0', result: COMPLEX_OBJECT(), id: 999 });
 		});
@@ -119,14 +119,14 @@ describe('server', function()
 		{
 			it ('function name is used when no explicit method name is passed', async function()
 			{
-				this.server.registerPublic(function foo() { return 'value'; });
+				this.server.register(function foo() { return 'value'; });
 				const response = await this.request({ jsonrpc: '2.0', method: 'foo', id: 10 });
 				expect(response).to.deep.equal({ jsonrpc: '2.0', result: 'value', id: 10 });
 			});
 
 			it ('function name is NOT used when explicit method name is passed', async function()
 			{
-				this.server.registerPublic('foo', function bar() { return 'value'; });
+				this.server.register('foo', function bar() { return 'value'; });
 
 				const successResponse = await this.request({ jsonrpc: '2.0', method: 'foo', id: 10 });
 				expect(successResponse).to.deep.equal({ jsonrpc: '2.0', result: 'value', id: 10 });
@@ -141,22 +141,22 @@ describe('server', function()
 		it('accepts a context (thisArg) on request accept', async function()
 		{
 			// Register stub getters and setters for properties 'foo' and 'bar'
-			this.server.registerPublic(function getFoo()
+			this.server.register(function getFoo()
 			{
 				return this.foo ?? 'undefined';
 			});
 
-			this.server.registerPublic(function getBar()
+			this.server.register(function getBar()
 			{
 				return this.bar ?? 'undefined';
 			});
 
-			this.server.registerPublic(function getBaz()
+			this.server.register(function getBaz()
 			{
 				return this.baz ?? 'undefined';
 			});
 
-			this.server.registerPublic(function setBaz(value)
+			this.server.register(function setBaz(value)
 			{
 				this.baz = value;
 			});
@@ -227,12 +227,12 @@ describe('server', function()
 
 		it('creates contexts with custom ids', async function()
 		{
-			this.server.registerPublic(function setName(name)
+			this.server.register(function setName(name)
 			{
 				this.name = name;
 			});
 
-			this.server.registerPublic(function getName()
+			this.server.register(function getName()
 			{
 				return this.name;
 			});
@@ -271,7 +271,7 @@ describe('server', function()
 				return this.foo;
 			});
 
-			this.server.registerPublic(function getData()
+			this.server.register(function getData()
 			{
 				return { foo: this.getFoo() };
 			});
@@ -348,9 +348,9 @@ describe('server', function()
 	{
 		it('fails to register unnabled methods', function()
 		{
-			this.server.registerPublic('foo', () => {});
-			this.server.registerPublic(function bar() {});
-			expect(() => this.server.registerPublic(() => {})).to.throw();
+			this.server.register('foo', () => {});
+			this.server.register(function bar() {});
+			expect(() => this.server.register(() => {})).to.throw();
 		});
 		// non-'2.0' jsonrpc; non-string id or method; unnecessary fields; or invalid json message
 		it('receives an invalid jsonrpc call', async function()
@@ -366,7 +366,7 @@ describe('server', function()
 					);
 			};
 
-			this.server.registerPublic('foo', () => {});
+			this.server.register('foo', () => {});
 
 			await validateError('', PARSE_ERROR, 'Empty json string');
 			await validateError('}{', PARSE_ERROR, 'Invalid json string');
@@ -385,7 +385,7 @@ describe('server', function()
 		});
 		it('server registered method handler throws an error', async function()
 		{
-			this.server.registerPublic('thrower', sinon.stub().throws());
+			this.server.register('thrower', sinon.stub().throws());
 			const response = await this.request({ jsonrpc: '2.0', method: 'thrower', id: null });
 			expect(response.id).to.be.null;
 			expect(response).to.have.property('error');
@@ -394,7 +394,7 @@ describe('server', function()
 		});
 		it('receives a request for an unregistered method', async function()
 		{
-			this.server.registerPublic('foo', () => 'bar');
+			this.server.register('foo', () => 'bar');
 			const successResponse = await this.request({ jsonrpc: '2.0', method: 'foo', id: null });
 			expect(successResponse).to.deep.equal({ jsonrpc: '2.0', result: 'bar', id: null });
 
@@ -409,7 +409,7 @@ describe('server', function()
 	{
 		it('rpc call with positional parameters', async function()
 		{
-			this.server.registerPublic('subtract', (a, b) => a - b);
+			this.server.register('subtract', (a, b) => a - b);
 			const response0 = await this.request({"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1});
 			expect(response0).to.deep.equal({"jsonrpc": "2.0", "result": 19, "id": 1});
 			const response1 = await this.request({"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2});
@@ -418,7 +418,7 @@ describe('server', function()
 
 		it('rpc call with named parameters', async function()
 		{
-			this.server.registerPublic('subtract', ({ subtrahend, minuend }) => minuend - subtrahend);
+			this.server.register('subtract', ({ subtrahend, minuend }) => minuend - subtrahend);
 			const response0 = await this.request({"jsonrpc": "2.0", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3});
 			expect(response0).to.deep.equal({"jsonrpc": "2.0", "result": 19, "id": 3});
 			const response1 = await this.request({"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4});
@@ -429,8 +429,8 @@ describe('server', function()
 		{
 			const update = sinon.stub();
 			const foobar = sinon.stub();
-			this.server.registerPublic('update', update);
-			this.server.registerPublic('foobar', foobar);
+			this.server.register('update', update);
+			this.server.register('foobar', foobar);
 			this.server.onresponse = () => expect.fail('Notification messages should not be responded');
 			this.server.accept({"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]});
 			this.server.accept({"jsonrpc": "2.0", "method": "foobar"});
@@ -469,7 +469,7 @@ describe('server', function()
 
 		it('validates invalid context ids', async function()
 		{
-			this.server.registerPublic('foo', () => {});
+			this.server.register('foo', () => {});
 
 			expect(() => this.server.createContext(new Boolean()))
 				.to.throw();
