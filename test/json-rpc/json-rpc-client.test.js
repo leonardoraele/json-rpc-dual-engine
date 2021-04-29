@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
-const JsonRpcClient = require('../client.js');
+const JsonRpcClient = require('../../client');
 
 const COMPLEX_OBJECT = () => (
 {

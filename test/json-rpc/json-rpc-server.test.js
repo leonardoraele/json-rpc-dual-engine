@@ -1,6 +1,6 @@
 const chai = require('chai');
 const sinon = require('sinon');
-const JsonRpcServer = require('../server.js');
+const JsonRpcServer = require('../../server');
 const chaiMatchPattern = require('chai-match-pattern');
 
 const { expect } = chai;

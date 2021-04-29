@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { JsonRpcClient, JsonRpcServer, JsonRpcStream, JsonRpcDualEngine } = require('..');
+const { JsonRpcClient, JsonRpcServer, JsonRpcStream, JsonRpcDualEngine } = require('../..');
 const stream = require('stream');
 
 describe('stream', function()
