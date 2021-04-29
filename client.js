@@ -1,1 +1,1 @@
-module.exports = require('./lib/json-rpc-client.js');
+module.exports = require('./lib/json-rpc/json-rpc-client.js');

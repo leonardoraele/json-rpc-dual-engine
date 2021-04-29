@@ -1,1 +1,1 @@
-module.exports = require('./lib/json-rpc-stream.js');
+module.exports = require('./lib/json-rpc/json-rpc-stream.js');
