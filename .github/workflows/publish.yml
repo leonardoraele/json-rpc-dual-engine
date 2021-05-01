@@ -1,0 +1,32 @@
+name: Publish
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Limit the permissions of the github token so that the script don't
+    # accidently do more than it should
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: lts
+
+      # Publish to NPM
+      - run: npm publish
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      # Publish to GitHub
+      - run: npm publish
+        env:
+          NPM_CONFIG_REGISTRY: https://npm.pkg.github.com/
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
