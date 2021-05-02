@@ -1,4 +1,10 @@
 # json-rpc-dual-engine
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/leonardoraele/json-rpc-dual-engine/Test/master)
+![NPM](https://img.shields.io/npm/l/json-rpc-dual-engine)
+![node-current](https://img.shields.io/node/v/json-rpc-dual-engine)
+![npm](https://img.shields.io/npm/v/json-rpc-dual-engine)
+![GitHub last commit](https://img.shields.io/github/last-commit/leonardoraele/json-rpc-dual-engine)
+![npm](https://img.shields.io/npm/dw/json-rpc-dual-engine)
 
 This is a zero-dependencies protocol agnostic implementation of the [JSON-RPC-2.0 spec] to allow remote function calls.
 

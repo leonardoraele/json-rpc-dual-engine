@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/leonardoraele/json-rpc-dual-engine"
   },
+  "engines": {
+    "node": ">=14 <=16"
+  },
   "keywords": [
     "json",
     "rpc",
