@@ -1,7 +1,9 @@
 name: Test
 
 on:
-  push: ~
+  push:
+    branhces:
+      ${{default-branch}}
   pull_request: ~
 
 jobs:
@@ -10,3 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/test
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version:
+          # TODO
+          # - 10
+          # - 12
+          - 14
+          - 16
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{matrix.node-version}}
+      - run: npm ci
+      - run: npm test
