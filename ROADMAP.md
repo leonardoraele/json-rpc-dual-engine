@@ -12,8 +12,7 @@
 
 - **Tests**
 	- Implement pending tests
-	- Use either egoist/testen, vadimdemedes/trevor, or CI to run tests simutaneously in all Node.js versions to ensure
-	coverage
+	- Create benchmark/performance tests
 
 - **Documentation**
 	- Create documentation for context-related features
