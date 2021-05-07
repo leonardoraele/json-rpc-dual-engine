@@ -11,6 +11,7 @@ jobs:
     # Limit the permissions of the github token so that the script don't
     # accidently do more than it should
     permissions:
+      repo: write
       contents: read
       packages: write
       actions: read
@@ -19,6 +20,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: lts
+<<<<<<< Updated upstream
       - run: npm ci
 
       # Consumes GitHub API to check if last test run passed
@@ -27,6 +29,12 @@ jobs:
           curl https://api.github.com/repos/leonardoraele/json-rpc-dual-engine/actions/workflows/test.yml \
           | npx json id
       - https://api.github.com/repos/leonardoraele/json-rpc-dual-engine/actions/workflows/8618439/runs
+=======
+      - name: "Setup GitHub publish user"
+        run: git config --local user.name "GitHub Actions"
+      - run: git push --follow-tags
+      - run: npm version ${{github.version}}
+>>>>>>> Stashed changes
 
       # Publish to NPM
       - run: npm publish
