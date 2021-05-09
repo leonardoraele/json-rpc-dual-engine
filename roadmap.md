@@ -4,11 +4,14 @@
 		(currently, error responses for user exceptions will always have the error code -32000)
 	- Implement timeout for client call responses
 	- Support middlewares
+	- Redesign context feature
+	- Make `JsonRpcServer.accept` method return the response
 
 - **Performance Enhancements**
 	- Improving the engine instantiation by moving method definitions to a shared prototype object so that each function
 		wont be recreated for each engine
 	- Consider alternatives to using proxies in the server context prototypes
+	- Consider alternatives to using proxies in the dual engine prototype
 
 - **Tests**
 	- Implement pending tests
