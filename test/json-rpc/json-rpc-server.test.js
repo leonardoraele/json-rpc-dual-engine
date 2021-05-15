@@ -209,6 +209,82 @@ function JsonRpcServerTests(JsonRpcServer)
 					expect(server.onresponse === stub).to.be.true;
 				});
 			});
+
+			describe('oncall callback', function()
+			{
+				it('calls oncall for requestes to registered methods and uses its response', async function()
+				{
+					function multiply(a, b)
+					{
+						return a * b;
+					}
+
+					this.server.register(multiply);
+
+					this.server.oncall = sinon.spy(function(method, args, forward)
+					{
+						expect(method).to.equal('multiply');
+						expect(args).to.deep.equal([7, 11]);
+						expect(this.multiply).to.equal(multiply);
+						return forward(method, args);
+					});
+
+					expect(await this.request({ jsonrpc: '2.0', method: 'multiply', params: [7, 11], id: 1 }))
+						.to.deep.equal({ jsonrpc: '2.0', result: 77, id: 1 });
+					expect(this.server.oncall.calledOnce).to.be.true;
+				});
+
+				it('oncall has direct access to registered methods and properties', async function()
+				{
+					this.server.register('getSeven', () => 7);
+					this.server.setProperty('eleven', 11);
+					this.server.oncall = function(method, args, forward)
+					{
+						return this.getSeven() * this.eleven;
+					};
+
+					expect(await this.request({ jsonrpc: '2.0', method: 'foo', id: 1 }))
+						.to.deep.equal({ jsonrpc: '2.0', result: 77, id: 1 });
+				});
+
+				it('calls oncall for requestes to non-registered methods and uses its response', async function()
+				{
+					this.server.register('foo', () => true);
+
+					this.server.oncall = function(method, args, forward)
+					{
+						return method === 'bar'
+							? true
+							: forward(method, args);
+					};
+
+					expect(await this.request({ jsonrpc: '2.0', method: 'foo', id: 1 })) // calls registered method
+						.to.deep.equal({ jsonrpc: '2.0', result: true, id: 1 });
+					expect(await this.request({ jsonrpc: '2.0', method: 'bar', id: 1 })) // calls method handled in oncall
+						.to.deep.equal({ jsonrpc: '2.0', result: true, id: 1 });
+					expect(await this.request({ jsonrpc: '2.0', method: 'baz', id: 1 })) // calls unregistered method
+						.to.matchPattern(`{ jsonrpc: '2.0', error: { code: -32601, message: _.isString, data: { method: 'baz' } }, id: 1 }`);
+				});
+
+				it('throws an error on oncall', async function()
+				{
+					this.server.register(function foo() {});
+
+					this.server.oncall = function(method, args, forward)
+					{
+						throw new Error('oncall crash');
+					};
+
+					expect(await this.request({ jsonrpc: '2.0', method: 'foo', id: 1 }))
+						.to.matchPattern(
+							`{
+								jsonrpc: '2.0',
+								error: { code: -32000, message: /oncall crash/, data: { stack: _.isString } },
+								id: 1,
+							}`,
+						);
+				});
+			});
 		});
 
 		describe('error scenarios', function()
