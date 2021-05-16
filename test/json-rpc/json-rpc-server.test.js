@@ -208,6 +208,13 @@ function JsonRpcServerTests(JsonRpcServer)
 
 					expect(server.onresponse === stub).to.be.true;
 				});
+
+				it('has a constructor oncall option', function()
+				{
+					function oncall() {}
+					const server = JsonRpcServer({ oncall });
+					expect(server.oncall).to.equal(oncall);
+				});
 			});
 
 			describe('oncall callback', function()
