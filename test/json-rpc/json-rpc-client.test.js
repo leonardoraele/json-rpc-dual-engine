@@ -176,12 +176,27 @@ function JsonRpcClientTests(JsonRpcClient)
 
 			it('times out the response promise after a period', async function()
 			{
+				// Timeout error occurs as expected
 				try
 				{
 					await this.client.request('multiply', [7, 11]);
 					expect.fail('The request promise should be rejected by timeout since no response was received.');
 				}
-				catch(e) {}
+				catch(e)
+				{
+					expect(e.message).to.match(/time(?:d )?out/);
+				}
+
+				// A response received after the request timed out is invalid
+				const spy = sinon.spy(console, 'error');
+				await this.client.accept({ jsonrpc: '2.0', result: 77, id: '1' });
+				expect(spy.calledOnce).to.be.true;
+				spy.restore();
+
+				// Client is still able to perform requests after the error
+				const responsePromise = this.client.request('add', [13, 21]);
+				await this.client.accept({ jsonrpc: '2.0', result: 34, id: '2' });
+				expect(await responsePromise).to.equal(34);
 			});
 
 			it('receives an unexpected response', async function()
