@@ -1,6 +1,11 @@
 name: Publish
 
 on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*.*.*
   release:
     types:
       - created
@@ -36,3 +41,4 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+1
