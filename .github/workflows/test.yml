@@ -11,11 +11,7 @@ jobs:
       matrix:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
         node-version:
-          # TODO
-          # - "10"
-          # - "12"
-          - "14"
-          - "16"
+          - "22"
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}

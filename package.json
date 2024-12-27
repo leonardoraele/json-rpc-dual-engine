@@ -2,15 +2,32 @@
   "name": "json-rpc-dual-engine",
   "version": "0.5.4",
   "description": "JSON-RPC-2.0 client and server protocol-agnostic engine.",
-  "main": "index.js",
   "author": "Leonardo Raele <leonardoraele@gmail.com>",
+  "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/leonardoraele/json-rpc-dual-engine"
   },
   "engines": {
-    "node": ">=14 <=16"
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/json-rpc-dual-engine.ts",
+    "./server": "./src/json-rpc-server.ts",
+    "./client": "./src/json-rpc-client.ts"
+  },
+  "imports": {
+    "#src/*.js": "./src/*.js"
+  },
+  "scripts": {
+    "test": "node --import=tsx --test **/*.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "expect": "^29.7.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   },
   "keywords": [
     "json",
@@ -25,16 +42,5 @@
     "socket",
     "websocket",
     "http"
-  ],
-  "scripts": {
-    "test": "mocha",
-    "coverage": "nyc --reporter=html npm test"
-  },
-  "devDependencies": {
-    "chai": "^4.2.0",
-    "chai-match-pattern": "^1.2.0",
-    "mocha": "^8.2.1",
-    "nyc": "^15.1.0",
-    "sinon": "^9.2.4"
-  }
+  ]
 }
