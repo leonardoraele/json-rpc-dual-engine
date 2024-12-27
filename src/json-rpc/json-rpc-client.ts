@@ -39,20 +39,26 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 		});
 	}
 
+	nextId(): number {
+		return this.#idCounter.next();
+	}
+
+	buildRequest<M extends keyof API & string>(method: M, params?: Parameters<API[M]>, { id = this.nextId() } = {}): string {
+		const requestObj: JsonRpcRequest = { jsonrpc: '2.0', id, method, params };
+		try {
+			return JSON.stringify(requestObj);
+		} catch (cause) {
+			throw new Error('Failed to send json-rpc request. Cause: Failed to serialize request params.', { cause });
+		}
+	}
+
 	async sendRequest<M extends keyof API & string>(method: M, params?: Parameters<API[M]>): Promise<ReturnType<API[M]>> {
 		if (this.onrequest === undefined) {
 			throw new Error('Failed to send json-rpc request. Cause: No request handler set in the client.');
 		}
 
-		const id = this.#idCounter.next();
-		const requestObj: JsonRpcRequest = { jsonrpc: '2.0', id, method, params };
-		const requestStr = (() => {
-			try {
-				return JSON.stringify(requestObj);
-			} catch (cause) {
-				throw new Error('Failed to send json-rpc request. Cause: Failed to serialize request params.', { cause });
-			}
-		})();
+		const id = this.nextId();
+		const requestStr = this.buildRequest(method, params, { id });
 
 		const resultPromise = new Promise((resolve, reject) => {
 			this.#pendingCalls[id] = { resolve, reject };

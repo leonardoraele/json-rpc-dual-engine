@@ -16,6 +16,11 @@ describe(JsonRpcClient.name, () => {
 		await expect(() => client.sendRequest('testMethod')).rejects.toThrow();
 	});
 
+	it('should build requests correctly', async () => {
+		const request = client.buildRequest('testMethod', ['param1', 'param2'], { id: 99 });
+		expect(request).toBe('{"jsonrpc":"2.0","id":99,"method":"testMethod","params":["param1","param2"]}');
+	});
+	
 	it('should send a request and receive a response', async () => {
 		client.onrequest = async (message: string) => {
 			const requestObj = JsonRpcRequest.parse(message);
