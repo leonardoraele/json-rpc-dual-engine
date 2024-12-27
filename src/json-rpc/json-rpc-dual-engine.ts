@@ -2,16 +2,12 @@ import { JsonRpcClient, MethodInterface } from './json-rpc-client.js';
 import { JsonRpcServer } from './json-rpc-server.js';
 import type { Duplex } from 'node:stream';
 
-type ConstructorOptions = ConstructorParameters<typeof JsonRpcClient>[0] & ConstructorParameters<typeof JsonRpcServer>[1];
+type ConstructorOptions = ConstructorParameters<typeof JsonRpcClient>[0] & ConstructorParameters<typeof JsonRpcServer>[0];
 type MessageHandler = (message: string) => unknown;
 
 export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
-	constructor(options: ConstructorOptions);
-	constructor(api: object, options: ConstructorOptions);
-	constructor(...args: any[]) {
-		const options = args[1] ?? args[0] ?? {};
-		const api = options === args[1] ? args[0] : {};
-		this.server = new JsonRpcServer(api, options);
+	constructor(options: ConstructorOptions) {
+		this.server = new JsonRpcServer(options);
 		this.client = new JsonRpcClient<RemoteAPI>(options);
 	}
 

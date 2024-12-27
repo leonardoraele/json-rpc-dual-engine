@@ -6,10 +6,15 @@ import type { Duplex } from 'node:stream';
 export type ResponseHandler = (response: string) => unknown;
 
 export class JsonRpcServer {
-	constructor(public api: object, { onresponse = undefined as ResponseHandler|undefined } = {}) {
+	constructor({
+		api = {} as object,
+		onresponse = undefined as ResponseHandler|undefined,
+	} = {}) {
+		this.api = api;
 		this.onresponse = onresponse;
 	}
 
+	api: object;
 	onresponse: ResponseHandler|undefined;
 
 	async accept(message: unknown): Promise<void> {

@@ -18,7 +18,7 @@ describe(JsonRpcServer.name, () => {
 	};
 
 	beforeEach(() => {
-		server = new JsonRpcServer(TEST_API, { onresponse });
+		server = new JsonRpcServer({ api: TEST_API, onresponse });
 		onresponse.mock.resetCalls();
 	});
 
