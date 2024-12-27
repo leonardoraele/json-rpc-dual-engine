@@ -13,7 +13,7 @@
     "node": ">=22"
   },
   "exports": {
-    ".": "./dist/json-rpc/json-rpc-dual-engine.js",
+    ".": "./dist/index.js",
     "./server": "./dist/json-rpc/json-rpc-server.js",
     "./client": "./dist/json-rpc/json-rpc-client.js"
   },
