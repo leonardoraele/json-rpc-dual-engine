@@ -6,8 +6,12 @@ type ConstructorOptions = ConstructorParameters<typeof JsonRpcClient>[0] & Const
 type MessageHandler = (message: string) => unknown;
 
 export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
-	constructor(localImpl: object, options: ConstructorOptions = {}) {
-		this.server = new JsonRpcServer(localImpl, options);
+	constructor(options: ConstructorOptions);
+	constructor(api: object, options: ConstructorOptions);
+	constructor(...args: any[]) {
+		const options = args[1] ?? args[0] ?? {};
+		const api = options === args[1] ? args[0] : {};
+		this.server = new JsonRpcServer(api, options);
 		this.client = new JsonRpcClient<RemoteAPI>(options);
 	}
 

@@ -12,8 +12,6 @@ export class JsonRpcServer {
 
 	onresponse: ResponseHandler|undefined;
 
-	get #api(): any { return this.api; }
-
 	async accept(message: unknown): Promise<void> {
 		try {
 			await this.#accept(message);
@@ -50,7 +48,9 @@ export class JsonRpcServer {
 		// types and we can validate them here. Invalid argument error has error code -32602
 		// Alternatively, should use JSON schema to validate the request params.
 
-		if (!(request.method in this.api) || typeof this.#api[request.method] !== 'function') {
+		const api = this.api as any;
+
+		if (!(request.method in api) || typeof api[request.method] !== 'function') {
 			throw new JsonRpcError({
 				jsonrpc: '2.0',
 				error: {
@@ -61,7 +61,7 @@ export class JsonRpcServer {
 				id: request.id ?? null,
 			});
 		}
-		return this.#api[request.method] as Function;
+		return api[request.method] as Function;
 	}
 
 	async #respondSuccess(result: any, id: string|number|null): Promise<void> {
