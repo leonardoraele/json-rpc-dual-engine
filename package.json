@@ -13,15 +13,18 @@
     "node": ">=22"
   },
   "exports": {
-    ".": "./src/json-rpc-dual-engine.ts",
-    "./server": "./src/json-rpc-server.ts",
-    "./client": "./src/json-rpc-client.ts"
+    ".": "./dist/json-rpc-dual-engine.js",
+    "./server": "./dist/json-rpc-server.js",
+    "./client": "./dist/json-rpc-client.js"
   },
   "imports": {
     "#src/*.js": "./src/*.js"
   },
+  "files": ["./dist/**/*"],
   "scripts": {
-    "test": "node --import=tsx --test **/*.ts"
+    "test": "node --import=tsx --test **/*.ts",
+    "build": "tsc --outdir dist",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
