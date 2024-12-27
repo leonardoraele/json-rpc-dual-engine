@@ -13,9 +13,9 @@
     "node": ">=22"
   },
   "exports": {
-    ".": "./dist/json-rpc-dual-engine.js",
-    "./server": "./dist/json-rpc-server.js",
-    "./client": "./dist/json-rpc-client.js"
+    ".": "./dist/json-rpc/json-rpc-dual-engine.js",
+    "./server": "./dist/json-rpc/json-rpc-server.js",
+    "./client": "./dist/json-rpc/json-rpc-client.js"
   },
   "imports": {
     "#src/*.js": "./src/*.js"
