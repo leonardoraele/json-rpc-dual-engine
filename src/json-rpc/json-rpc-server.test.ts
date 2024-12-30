@@ -1,4 +1,4 @@
-import { expect} from 'expect';
+import { expect } from 'expect';
 import { beforeEach, describe, it, mock } from 'node:test';
 import { JsonRpcServer } from './json-rpc-server.js';
 
@@ -93,5 +93,30 @@ describe(JsonRpcServer.name, () => {
 		const parsed = JSON.parse(result.value!);
 
 		expect(parsed).toEqual({ jsonrpc: '2.0', result: 'pong', id: 1 });
+	});
+
+	it('should work as a piped stream', async () => {
+		const input = new ReadableStream({
+			start(controller) {
+				controller.enqueue(JSON.stringify({ jsonrpc: '2.0', method: 'ping', id: 1 }));
+				controller.close();
+			},
+		});
+		const stream = server.toStream();
+		const output = new WritableStream<string>({
+			start() {
+				this.chunks = [];
+			},
+			write(chunk) {
+				this.chunks.push(chunk);
+			},
+			close() {
+				expect(this.chunks).toEqual([JSON.stringify({ jsonrpc: '2.0', result: 'pong', id: 1 })])
+			},
+		});
+
+		expect.assertions(1);
+
+		await input.pipeThrough(stream).pipeTo(output);
 	});
 });

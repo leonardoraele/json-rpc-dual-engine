@@ -27,7 +27,7 @@ export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
 		}
 	}
 
-	toStream(): TransformStream<string, string> {
+	toStream(): ReadableWritablePair<string, string> {
 		return new TransformStream({
 			start: controller => this.onmessage = response => controller.enqueue(response),
 			transform: message => this.accept(message),

@@ -110,9 +110,9 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 		}
 	}
 
-	toStreamPair(): { input: WritableStream<string>, output: ReadableStream<string> } {
-		const input = new WritableStream<string>({ write: message => this.accept(message) });
-		const output = new ReadableStream<string>({ start: controller => this.onrequest = message => controller.enqueue(message) });
-		return { input, output };
+	toStream(): ReadableWritablePair<string, string> {
+		const readable = new ReadableStream<string>({ start: controller => this.onrequest = message => controller.enqueue(message) });
+		const writable = new WritableStream<string>({ write: message => this.accept(message) });
+		return { readable, writable };
 	}
 }
