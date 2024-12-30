@@ -28,12 +28,10 @@
   "scripts": {
     "test": "node --import=tsx --test **/*.ts",
     "build": "tsc --outdir dist",
-    "prebuild": "rimraf dist",
-    "publish": "npm run test && npm run build && npm version $(conventional-recommended-bump) && npm publish"
+    "prebuild": "rimraf dist"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "conventional-recommended-bump": "^10.0.0",
     "expect": "^29.7.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
