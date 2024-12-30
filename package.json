@@ -28,7 +28,8 @@
   "scripts": {
     "test": "node --import=tsx --test **/*.ts",
     "build": "tsc --outdir dist",
-    "prebuild": "rimraf dist"
+    "prebuild": "rimraf dist",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
