@@ -15,9 +15,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./server": "./dist/json-rpc/json-rpc-server.js",
-    "./server/node": "./dist/json-rpc/json-rpc-server-node.js",
-    "./client": "./dist/json-rpc/json-rpc-client.js",
-    "./client/node": "./dist/json-rpc/json-rpc-client-node.js"
+    "./client": "./dist/json-rpc/json-rpc-client.js"
   },
   "imports": {
     "#src/*.js": "./src/*.js"

@@ -1,6 +1,5 @@
 import { JsonRpcClient, MethodInterface } from './json-rpc-client.js';
 import { JsonRpcServer } from './json-rpc-server.js';
-import type { Duplex } from 'node:stream';
 
 type ConstructorOptions = ConstructorParameters<typeof JsonRpcClient>[0] & ConstructorParameters<typeof JsonRpcServer>[0];
 type MessageHandler = (message: string) => unknown;
@@ -33,10 +32,5 @@ export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
 			start: controller => this.onmessage = response => controller.enqueue(response),
 			transform: message => this.accept(message),
 		});
-	}
-
-	async toNodeStream(): Promise<Duplex> {
-		const { Duplex } = await import('node:stream');
-		return Duplex.fromWeb(this.toStream());
 	}
 }
