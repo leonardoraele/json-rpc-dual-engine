@@ -15,7 +15,9 @@
   "exports": {
     ".": "./dist/index.js",
     "./server": "./dist/json-rpc/json-rpc-server.js",
-    "./client": "./dist/json-rpc/json-rpc-client.js"
+    "./server/node": "./dist/json-rpc/json-rpc-server-node.js",
+    "./client": "./dist/json-rpc/json-rpc-client.js",
+    "./client/node": "./dist/json-rpc/json-rpc-client-node.js"
   },
   "imports": {
     "#src/*.js": "./src/*.js"
@@ -26,11 +28,14 @@
   "scripts": {
     "test": "node --import=tsx --test **/*.ts",
     "build": "tsc --outdir dist",
-    "prepublish": "npm run build"
+    "prebuild": "rimraf dist",
+    "publish": "npm run test && npm run build && npm version $(conventional-recommended-bump) && npm publish"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "conventional-recommended-bump": "^10.0.0",
     "expect": "^29.7.0",
+    "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
