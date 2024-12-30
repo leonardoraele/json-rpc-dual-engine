@@ -1,7 +1,6 @@
 import { IdCounter } from '#src/util/id-counter.js';
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
-import type { Writable, Readable } from 'node:stream';
 
 export type RequestHandler = (request: string) => unknown;
 export type RemoteObject<T> = {
@@ -114,14 +113,6 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 	toStreamPair(): { input: WritableStream<string>, output: ReadableStream<string> } {
 		const input = new WritableStream<string>({ write: message => this.accept(message) });
 		const output = new ReadableStream<string>({ start: controller => this.onrequest = message => controller.enqueue(message) });
-		return { input, output };
-	}
-
-	async toNodeStreamPair(): Promise<{ input: Writable, output: Readable }> {
-		const { Writable, Readable } = await import('node:stream');
-		const { input: webInput, output: webOutput } = this.toStreamPair();
-		const input = Writable.fromWeb(webInput);
-		const output = Readable.fromWeb(webOutput);
 		return { input, output };
 	}
 }

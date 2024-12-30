@@ -1,7 +1,6 @@
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcError } from './json-rpc-error.js';
 import { JsonRpcErrorResponse, JsonRpcResponse } from './json-rpc-response.js';
-import type { Duplex } from 'node:stream';
 
 export type ResponseHandler = (response: string) => unknown;
 
@@ -122,10 +121,5 @@ export class JsonRpcServer {
 			start: (controller) => this.onresponse = message => controller.enqueue(message),
 			transform: chunk => this.accept(chunk),
 		});
-	}
-
-	async toNodeStream(): Promise<Duplex> {
-		const { Duplex } = await import('node:stream');
-		return Duplex.fromWeb(this.toStream());
 	}
 }
