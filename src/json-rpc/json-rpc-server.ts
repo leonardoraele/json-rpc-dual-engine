@@ -42,7 +42,7 @@ export class JsonRpcServer {
 			}
 		})();
 
-		if (request.id) {
+		if ('id' in request && request.id !== undefined) {
 			await this.#respondSuccess(result, request.id);
 		}
 	}
