@@ -43,7 +43,7 @@ describe('JsonRpcRequest', () => {
 				params: { key: 'value' },
 				id: 1
 			};
-			expect(() => JsonRpcRequest.assert(request)).not.toThrow();
+			expect(() => JsonRpcRequest.parse(request)).not.toThrow();
 		});
 
 		it('should throw an error for an invalid JSON-RPC request object', () => {
@@ -51,7 +51,7 @@ describe('JsonRpcRequest', () => {
 				jsonrpc: '1.0',
 				method: 'testMethod'
 			};
-			expect(() => JsonRpcRequest.assert(request)).toThrow(JsonRpcError);
+			expect(() => JsonRpcRequest.parse(request)).toThrow(JsonRpcError);
 		});
 
 		it('should throw an error if "jsonrpc" is not "2.0"', () => {
@@ -60,7 +60,7 @@ describe('JsonRpcRequest', () => {
 				method: 'testMethod',
 				id: 1
 			};
-			expect(() => JsonRpcRequest.assert(request)).toThrow(JsonRpcError);
+			expect(() => JsonRpcRequest.parse(request)).toThrow(JsonRpcError);
 		});
 
 		it('should throw an error if "method" is not a string', () => {
@@ -69,7 +69,7 @@ describe('JsonRpcRequest', () => {
 				method: 123,
 				id: 1
 			};
-			expect(() => JsonRpcRequest.assert(request)).toThrow(JsonRpcError);
+			expect(() => JsonRpcRequest.parse(request)).toThrow(JsonRpcError);
 		});
 
 		it('should throw an error if "params" is not an object or array', () => {
@@ -79,7 +79,7 @@ describe('JsonRpcRequest', () => {
 				params: 'invalidParams',
 				id: 1
 			};
-			expect(() => JsonRpcRequest.assert(request)).toThrow(JsonRpcError);
+			expect(() => JsonRpcRequest.parse(request)).toThrow(JsonRpcError);
 		});
 
 		it('should throw an error if "id" is not a string, number, or null', () => {
@@ -88,7 +88,7 @@ describe('JsonRpcRequest', () => {
 				method: 'testMethod',
 				id: {}
 			};
-			expect(() => JsonRpcRequest.assert(request)).toThrow(JsonRpcError);
+			expect(() => JsonRpcRequest.parse(request)).toThrow(JsonRpcError);
 		});
 
 		it('should not throw an error if "id" is missing', () => {
@@ -96,7 +96,7 @@ describe('JsonRpcRequest', () => {
 				jsonrpc: '2.0',
 				method: 'testMethod',
 			};
-			expect(() => JsonRpcRequest.assert(request)).not.toThrow();
+			expect(() => JsonRpcRequest.parse(request)).not.toThrow();
 		});
 
 		it('should not throw an error if "id" is null', () => {
@@ -105,26 +105,7 @@ describe('JsonRpcRequest', () => {
 				method: 'testMethod',
 				id: null
 			};
-			expect(() => JsonRpcRequest.assert(request)).not.toThrow();
-		});
-	});
-
-	describe('is', () => {
-		it('should return true for a valid JSON-RPC request object', () => {
-			const request = {
-				jsonrpc: '2.0',
-				method: 'testMethod'
-			} as const;
-			expect(JsonRpcRequest.is(request)).toBe(true);
-		});
-
-		it('should return false for a JSON-RPC response object', () => {
-			const response = {
-				jsonrpc: '2.0',
-				result: 'testResult',
-				id: 1
-			} as const;
-			expect(JsonRpcRequest.is(response)).toBe(false);
+			expect(() => JsonRpcRequest.parse(request)).not.toThrow();
 		});
 	});
 });

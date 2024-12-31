@@ -43,27 +43,6 @@ describe('JsonRpcResponse', () => {
 		});
 	});
 
-	describe('is', () => {
-		it('should return true for a valid JsonRpcResponse', () => {
-			const response: JsonRpcSuccessResponse = {
-				jsonrpc: '2.0',
-				result: 'some result',
-				id: 1
-			};
-			expect(JsonRpcResponse.is(response)).toBe(true);
-		});
-
-		it('should return false for a JsonRpcRequest', () => {
-			const request = {
-				jsonrpc: '2.0',
-				method: 'someMethod',
-				params: [],
-				id: 1
-			} as const;
-			expect(JsonRpcResponse.is(request)).toBe(false);
-		});
-	});
-
 	describe('parse', () => {
 		it('should parse a valid success response', () => {
 			const message = JSON.stringify({
