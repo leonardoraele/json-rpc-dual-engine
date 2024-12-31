@@ -1,5 +1,3 @@
-import { JsonRpcRequest } from './json-rpc-request.js';
-
 export type JsonRpcResponse = JsonRpcSuccessResponse|JsonRpcErrorResponse;
 
 export type JsonRpcSuccessResponse = {

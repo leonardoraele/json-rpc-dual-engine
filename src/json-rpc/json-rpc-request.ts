@@ -1,5 +1,4 @@
 import { JsonRpcError } from './json-rpc-error.js';
-import { JsonRpcResponse } from './json-rpc-response.js';
 
 export type JsonRpcRequest = {
 	jsonrpc: '2.0',
