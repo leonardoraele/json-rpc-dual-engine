@@ -18,7 +18,7 @@
     "./client": "./dist/json-rpc/json-rpc-client.js"
   },
   "imports": {
-    "#src/*.js": "./src/*.js"
+    "#src/*.js": "./dist/*.js"
   },
   "files": [
     "./dist/**/*"
