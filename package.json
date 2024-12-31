@@ -10,7 +10,7 @@
     "url": "https://github.com/leonardoraele/json-rpc-dual-engine"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=18"
   },
   "exports": {
     ".": "./dist/index.js",
