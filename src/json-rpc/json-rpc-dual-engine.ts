@@ -21,6 +21,14 @@ export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
 	}
 
 	async accept(message: unknown): Promise<void> {
+		try {
+			await this.#accept(message);
+		} catch (cause) {
+			console.error(new Error('Failed to accept json-rpc message.', { cause }));
+		}
+	}
+
+	async #accept(message: unknown): Promise<void> {
 		const object = typeof message === 'string' ? JSON.parse(message) as unknown : message;
 		const parsed = (() => {
 			try {

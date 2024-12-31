@@ -98,7 +98,7 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 		try {
 			this.#accept(message);
 		} catch (cause) {
-			console.error('Failed to handle json-rpc response. Cause: An error occurred while processing the response.', { cause });
+			console.error(new Error('Failed to handle json-rpc response. Cause: An error occurred while processing the response.', { cause }));
 		}
 	}
 
