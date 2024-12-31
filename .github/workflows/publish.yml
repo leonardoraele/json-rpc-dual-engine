@@ -4,7 +4,7 @@ on:
   workflow_dispatch: ~
   push:
     branches:
-      - main
+      - master
     tags:
       - v[0-9]*
   release:
@@ -12,7 +12,19 @@ on:
       - created
 
 jobs:
-  publish:
+  publish_npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          node-version: '22'
+      - run: npm ci
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  publish_github:
     runs-on: ubuntu-latest
     # Limit the permissions of the github token so that the script don't
     # accidently do more than it should
@@ -20,25 +32,12 @@ jobs:
       contents: read
       packages: write
     steps:
-      # Setup
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
+          registry-url: 'https://npm.pkg.github.com'
           node-version: '22'
       - run: npm ci
-
-      # Publish to NPM
-      - uses: actions/setup-node@v2
-        with:
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # Publish to GitHub
-      - uses: actions/setup-node@v2
-        with:
-          registry-url: 'https://npm.pkg.github.com'
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
