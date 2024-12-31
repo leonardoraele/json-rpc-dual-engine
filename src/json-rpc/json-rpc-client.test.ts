@@ -20,7 +20,7 @@ describe(JsonRpcClient.name, () => {
 		const request = client.buildRequest('testMethod', ['param1', 'param2'], { id: 99 });
 		expect(request).toBe('{"jsonrpc":"2.0","id":99,"method":"testMethod","params":["param1","param2"]}');
 	});
-	
+
 	it('should send a request and receive a response', async () => {
 		client.onrequest = async (message: string) => {
 			const requestObj = JsonRpcRequest.parse(message);
@@ -61,8 +61,10 @@ describe(JsonRpcClient.name, () => {
 		}
 	});
 
-	it('should handle a response with an unexpected id', () => {
+	it('should handle a response with an unexpected id', t => {
 		const responseObj: JsonRpcResponse = { jsonrpc: '2.0', id: 'unexpectedId', result: 'testResult' };
-		expect(() => client.accept(JSON.stringify(responseObj))).toThrow();
+		const { mock } = t.mock.method(console, 'error', () => {});
+		client.accept(JSON.stringify(responseObj));
+		expect(mock.calls).toHaveLength(1);
 	});
 });

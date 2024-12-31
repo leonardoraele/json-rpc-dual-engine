@@ -35,11 +35,11 @@ export namespace JsonRpcResponse {
 		}
 
 		if ('result' in subject) {
-			markSuccess({ jsonrpc: '2.0', result: subject.result, id: subject.id });
+			return markSuccess({ jsonrpc: '2.0', result: subject.result, id: subject.id });
 		}
 
 		if (!('error' in subject) || typeof subject.error !== 'object' || subject.error === null) {
-			throw new Error('Failed to parse json-rpc response. Cause: The response is not an error response.', { cause: { message } });
+			throw new Error('Failed to parse json-rpc response. Cause: The response is neither success nor error. It lacks both the "result" and the "error" fields.', { cause: { message } });
 		}
 
 		if (!('code' in subject.error) || typeof subject.error.code !== 'number') {
