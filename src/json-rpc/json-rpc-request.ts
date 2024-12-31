@@ -9,10 +9,16 @@ export type JsonRpcRequest = {
 };
 
 export namespace JsonRpcRequest {
-	export function parse(message: unknown): JsonRpcRequest {
-		const request = (() => {
+	const PARSED_SYMBOL = Symbol('JsonRpcRequest.PARSED');
+
+	export function parse(subject: unknown): JsonRpcRequest {
+		if (typeof subject === 'object' && subject !== null && PARSED_SYMBOL in subject) {
+			return subject as any as JsonRpcRequest;
+		}
+
+		if (typeof subject === 'string') {
 			try {
-				return typeof message === 'string' ? JSON.parse(message) : message;
+				subject = JSON.parse(subject);
 			} catch(e) {
 				throw new JsonRpcError({
 					jsonrpc: '2.0',
@@ -25,14 +31,8 @@ export namespace JsonRpcRequest {
 					id: null,
 				});
 			}
-		})();
+		}
 
-		assert(request);
-
-		return request;
-	}
-
-	export function assert(subject: unknown): asserts subject is JsonRpcRequest {
 		if (typeof subject !== 'object' || subject === null) {
 			throw new JsonRpcError({
 				jsonrpc: '2.0',
@@ -123,9 +123,12 @@ export namespace JsonRpcRequest {
 				id: id ?? null,
 			});
 		}
+
+		return markParsed({ jsonrpc, method, params, id });
 	}
 
-	export function is(message: JsonRpcRequest|JsonRpcResponse): message is JsonRpcRequest {
-		return 'method' in message;
+	function markParsed(request: JsonRpcRequest): JsonRpcRequest {
+		Object.defineProperty(request, PARSED_SYMBOL, { value: true, enumerable: false });
+		return request;
 	}
 }

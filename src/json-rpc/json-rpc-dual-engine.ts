@@ -1,4 +1,6 @@
 import { JsonRpcClient, MethodInterface } from './json-rpc-client.js';
+import { JsonRpcRequest } from './json-rpc-request.js';
+import { JsonRpcResponse } from './json-rpc-response.js';
 import { JsonRpcServer } from './json-rpc-server.js';
 
 type ConstructorOptions = ConstructorParameters<typeof JsonRpcClient>[0] & ConstructorParameters<typeof JsonRpcServer>[0];
@@ -19,12 +21,21 @@ export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
 	}
 
 	async accept(message: unknown): Promise<void> {
-		const object = typeof message === 'string' ? JSON.parse(message) : message;
-		if ('method' in object) {
-			await this.server.accept(message);
-		} else {
-			this.client.accept(message);
-		}
+		const object = typeof message === 'string' ? JSON.parse(message) as unknown : message;
+		const parsed = (() => {
+			try {
+				return JsonRpcRequest.parse(object);
+			} catch(requestError) {
+				try {
+					return JsonRpcResponse.parse(object);
+				} catch (responseError) {
+					throw new Error('Failed to parse json-rpc message.', { cause: { requestError, responseError } });
+				}
+			}
+		})();
+		await 'method' in parsed
+			? this.server.accept(parsed)
+			: this.client.accept(parsed);
 	}
 
 	toStream(): ReadableWritablePair<string, string> {

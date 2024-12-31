@@ -95,6 +95,14 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 	}
 
 	accept(message: unknown): void {
+		try {
+			this.#accept(message);
+		} catch (cause) {
+			console.error('Failed to handle json-rpc response. Cause: An error occurred while processing the response.', { cause });
+		}
+	}
+
+	#accept(message: unknown): void {
 		const response = JsonRpcResponse.parse(message);
 
 		if (response.id === null || !(response.id in this.#pendingCalls)) {
