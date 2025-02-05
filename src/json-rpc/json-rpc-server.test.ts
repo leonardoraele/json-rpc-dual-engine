@@ -15,9 +15,11 @@ describe(JsonRpcServer.name, () => {
 		hello: (name: string) => `Hello, ${name}!`,
 		void: () => {},
 		throws: () => { throw new Error('Test error') },
+		_privateMethod: () => {},
 		deeply: {
 			nested: {
-				method: () => 1,
+				publicMethod: () => 1,
+				_privateMethod: () => {},
 			},
 		},
 	};
@@ -45,8 +47,15 @@ describe(JsonRpcServer.name, () => {
 	});
 
 	it('should find methods in nested objects', async () => {
-		await server.accept({ jsonrpc: '2.0', method: 'deeply.nested.method', id: 1 });
+		await server.accept({ jsonrpc: '2.0', method: 'deeply.nested.publicMethod', id: 1 });
 		expect(getResponseParsed()).toEqual({ jsonrpc: '2.0', result: 1, id: 1 });
+	});
+
+	it('should not allow accessing private methods', async () => {
+		await server.accept({ jsonrpc: '2.0', method: '_privateMethod', id: 1 });
+		expect(getResponseParsed()).toMatchObject({ error: { code: -32601, message: expect.stringMatching(/.+/) }, id: 1 });
+		await server.accept({ jsonrpc: '2.0', method: 'deeply.nested._privateMethod', id: 1 });
+		expect(getResponseParsed()).toMatchObject({ error: { code: -32601, message: expect.stringMatching(/.+/) }, id: 1 });
 	});
 
 	it('should return an error if the method does not exist', async () => {

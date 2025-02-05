@@ -54,14 +54,16 @@ export class JsonRpcServer {
 
 		methodName ||= request.method;
 
-		if (typeof subject[methodName] === 'function') {
-			return subject[methodName];
-		}
+		if (!methodName.startsWith('_')) {
+			if (typeof subject[methodName] === 'function') {
+				return subject[methodName];
+			}
 
-		const [_fullName, firstPart, rest] = methodName.match(/^([^.]+)\.(.+)/) ?? [];
+			const [_fullName, firstPart, rest] = methodName.match(/^([^.]+)\.(.+)/) ?? [];
 
-		if (!!firstPart && typeof subject[firstPart] === 'object' && subject[firstPart] !== null) {
-			return this.#findApiMethod(request, subject[firstPart], rest);
+			if (!!firstPart && typeof subject[firstPart] === 'object' && subject[firstPart] !== null) {
+				return this.#findApiMethod(request, subject[firstPart], rest);
+			}
 		}
 
 		throw new JsonRpcError({
