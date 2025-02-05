@@ -47,25 +47,32 @@ export class JsonRpcServer {
 		}
 	}
 
-	#findApiMethod(request: JsonRpcRequest): Function {
+	#findApiMethod(request: JsonRpcRequest, subject: any = this.api, methodName: string = ''): Function {
 		// TODO Create an interface on method registration so that the user can optionally define the method parameters'
 		// types and we can validate them here. Invalid argument error has error code -32602
 		// Alternatively, should use JSON schema to validate the request params.
 
-		const api = this.api as any;
+		methodName ||= request.method;
 
-		if (!(request.method in api) || typeof api[request.method] !== 'function') {
-			throw new JsonRpcError({
-				jsonrpc: '2.0',
-				error: {
-					code: -32601,
-					message: `Requested method does not exist in the server.`,
-					data: { method: request.method },
-				},
-				id: request.id ?? null,
-			});
+		if (typeof subject[methodName] === 'function') {
+			return subject[methodName];
 		}
-		return api[request.method] as Function;
+
+		const [_fullName, firstPart, rest] = methodName.match(/^([^.]+)\.(.+)/) ?? [];
+
+		if (!!firstPart && typeof subject[firstPart] === 'object' && subject[firstPart] !== null) {
+			return this.#findApiMethod(request, subject[firstPart], rest);
+		}
+
+		throw new JsonRpcError({
+			jsonrpc: '2.0',
+			error: {
+				code: -32601,
+				message: `Requested method does not exist in the server.`,
+				data: { method: request.method },
+			},
+			id: request.id ?? null,
+		});
 	}
 
 	async #respondSuccess(result: any, id: string|number|null): Promise<void> {

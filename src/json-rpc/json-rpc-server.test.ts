@@ -15,6 +15,11 @@ describe(JsonRpcServer.name, () => {
 		hello: (name: string) => `Hello, ${name}!`,
 		void: () => {},
 		throws: () => { throw new Error('Test error') },
+		deeply: {
+			nested: {
+				method: () => 1,
+			},
+		},
 	};
 
 	beforeEach(() => {
@@ -37,6 +42,11 @@ describe(JsonRpcServer.name, () => {
 
 		await server.accept({ jsonrpc: '2.0', method: 'throws', id: 5 });
 		expect(getResponseParsed()).toMatchObject({ jsonrpc: '2.0', error: {}, id: 5 });
+	});
+
+	it('should find methods in nested objects', async () => {
+		await server.accept({ jsonrpc: '2.0', method: 'deeply.nested.method', id: 1 });
+		expect(getResponseParsed()).toEqual({ jsonrpc: '2.0', result: 1, id: 1 });
 	});
 
 	it('should return an error if the method does not exist', async () => {
