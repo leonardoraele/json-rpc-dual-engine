@@ -1,6 +1,6 @@
 {
   "name": "json-rpc-dual-engine",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "JSON-RPC-2.0 client and server protocol-agnostic engine.",
   "author": "Leonardo Raele <leonardoraele@gmail.com>",
   "type": "module",
