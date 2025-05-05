@@ -1,20 +1,29 @@
-import { IdCounter } from '#src/util/id-counter.js';
 import { SignalController } from 'signal-controller';
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
+import { nanoid } from 'nanoid';
+import type { JSONEntry as JSONValue } from 'json-types';
 
-export type RemoteObject<T extends BaseAPIType> = {
-	[K in keyof T]: T[K] extends BaseMethodType
-		? (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>
-		: BaseMethodType;
+// TODO Improvde this signature
+export type RemoteObject<APIType extends BaseAPIType> = {
+	[MethodName in keyof APIType]: (...args: unknown[]) => Promise<APIMethodReturn<APIType, MethodName>>;
 };
 
-export type BaseMethodType = (...args: any[]) => any;
-export type BaseAPIType = Record<string, BaseMethodType>;
+export type JsonRpcRequestParams = object | Array<unknown>;
 
 export interface JsonRpcClientOptions {
 	timeout?: number;
 }
+
+export interface BaseAPIType {
+	[method: string]: {
+		params: JsonRpcRequestParams;
+		return: JSONValue;
+	};
+}
+
+export type APIMethodParams<APIType extends BaseAPIType, MethodName extends keyof APIType> = APIType[MethodName]['params'];
+export type APIMethodReturn<APIType extends BaseAPIType, MethodName extends keyof APIType> = APIType[MethodName]['return'];
 
 export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 	constructor({
@@ -24,7 +33,6 @@ export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 	}
 
 	timeout: number;
-	#idCounter = new IdCounter();
 	#pendingCalls: Record<string, PromiseWithResolvers<unknown>> = {};
 	#serverProxy?: any;
 	#controller = new SignalController<{
@@ -46,11 +54,9 @@ export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 		});
 	}
 
-	nextId(): number {
-		return this.#idCounter.next();
-	}
-
-	buildRequest<M extends keyof APIType & string>(method: M, params?: Parameters<APIType[M]>, { id = this.nextId() } = {}): string {
+	buildRequest<MethodName extends keyof APIType>(method: MethodName, params?: APIMethodParams<APIType, MethodName>, options?: { id: string }): string;
+	buildRequest(method: string, params?: JsonRpcRequestParams, options?: { id: string }): string;
+	buildRequest(method: string, params?: JsonRpcRequestParams, { id = nanoid() } = {}): string {
 		const requestObj: JsonRpcRequest = { jsonrpc: '2.0', id, method, params };
 		try {
 			return JSON.stringify(requestObj);
@@ -59,9 +65,11 @@ export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 		}
 	}
 
-	async sendRequest<MethodName extends keyof APIType>(method: MethodName, params?: Parameters<APIType[MethodName]>): Promise<ReturnType<APIType[MethodName]>> {
-		const id = this.nextId();
-		const requestStr = this.buildRequest(method as string, params, { id });
+	async sendRequest<MethodName extends keyof APIType>(method: MethodName, params?: APIMethodParams<APIType, MethodName>): Promise<APIMethodReturn<APIType, MethodName>>;
+	async sendRequest(method: string, params?: JsonRpcRequestParams): Promise<unknown>;
+	async sendRequest(method: string, params?: JsonRpcRequestParams): Promise<unknown> {
+		const id = nanoid();
+		const requestStr = this.buildRequest(method, params, { id });
 		const resolvers = this.#pendingCalls[id] = Promise.withResolvers();
 		AbortSignal.timeout(this.timeout)
 			.addEventListener('abort', () =>
@@ -69,10 +77,12 @@ export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 			);
 		resolvers.promise = resolvers.promise.finally(() => delete this.#pendingCalls[id]);
 		this.#controller.emit('request', requestStr);
-		return resolvers.promise as Promise<ReturnType<APIType[MethodName]>>;
+		return resolvers.promise;
 	}
 
-	async sendNotification(method: string, params: unknown[]): Promise<void> {
+	sendNotification<MethodName extends keyof APIType>(method: MethodName, params: APIMethodParams<APIType, MethodName>): void;
+	sendNotification(method: string, params: unknown[]): void;
+	sendNotification(method: string, params: unknown[]): void {
 		const requestObj: JsonRpcRequest = { jsonrpc: '2.0', method, params };
 		const requestStr = (() => {
 			try {

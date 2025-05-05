@@ -4,15 +4,15 @@ import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
 import { JsonRpcServer, JsonRpcServerOptions } from './json-rpc-server.js';
 
-export class JsonRpcDualEngine<RemoteAPIType extends BaseAPIType> {
-	constructor(handler: RemoteAPIType, options?: JsonRpcServerOptions & JsonRpcClientOptions) {
+export class JsonRpcDualEngine<LocalAPIType extends BaseAPIType, RemoteAPIType extends BaseAPIType = BaseAPIType> {
+	constructor(handler: LocalAPIType, options?: JsonRpcServerOptions & JsonRpcClientOptions) {
 		this.server = new JsonRpcServer(handler, options);
 		this.client = new JsonRpcClient(options);
 		this.server.events.on('response', response => this.#controller.emit('message', response));
 		this.client.events.on('request', request => this.#controller.emit('message', request));
 	}
 
-	readonly server: JsonRpcServer<RemoteAPIType>;
+	readonly server: JsonRpcServer<LocalAPIType>;
 	readonly client: JsonRpcClient<RemoteAPIType>;
 
 	#controller = new SignalController<{ message(message: string): void; }>();
