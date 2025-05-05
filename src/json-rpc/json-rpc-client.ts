@@ -6,7 +6,7 @@ import { JsonRpcResponse } from './json-rpc-response.js';
 export type RemoteObject<T extends BaseAPIType> = {
 	[K in keyof T]: T[K] extends BaseMethodType
 		? (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>
-		: never;
+		: BaseMethodType;
 };
 
 export type BaseMethodType = (...args: any[]) => any;
