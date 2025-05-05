@@ -1,23 +1,24 @@
-import { JsonRpcClient, MethodInterface } from './json-rpc-client.js';
+import { SignalController } from 'signal-controller';
+import { JsonRpcClient, BaseAPIType, JsonRpcClientOptions } from './json-rpc-client.js';
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
-import { JsonRpcServer } from './json-rpc-server.js';
+import { JsonRpcServer, JsonRpcServerOptions } from './json-rpc-server.js';
 
-type ConstructorOptions = ConstructorParameters<typeof JsonRpcClient>[0] & ConstructorParameters<typeof JsonRpcServer>[0];
-type MessageHandler = (message: string) => unknown;
-
-export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
-	constructor(options?: ConstructorOptions) {
-		this.server = new JsonRpcServer(options);
-		this.client = new JsonRpcClient<RemoteAPI>(options);
+export class JsonRpcDualEngine<RemoteAPIType extends BaseAPIType> {
+	constructor(handler: RemoteAPIType, options?: JsonRpcServerOptions & JsonRpcClientOptions) {
+		this.server = new JsonRpcServer(handler, options);
+		this.client = new JsonRpcClient(options);
+		this.server.events.on('response', response => this.#controller.emit('message', response));
+		this.client.events.on('request', request => this.#controller.emit('message', request));
 	}
 
-	readonly server: JsonRpcServer;
-	readonly client: JsonRpcClient<RemoteAPI>;
+	readonly server: JsonRpcServer<RemoteAPIType>;
+	readonly client: JsonRpcClient<RemoteAPIType>;
 
-	set onmessage(value: MessageHandler|undefined) {
-		this.server.onresponse = value;
-		this.client.onrequest = value;
+	#controller = new SignalController<{ message(message: string): void; }>();
+
+	get events() {
+		return this.#controller.signal;
 	}
 
 	async accept(message: unknown): Promise<void> {
@@ -47,9 +48,13 @@ export class JsonRpcDualEngine<RemoteAPI extends MethodInterface = any> {
 	}
 
 	toStream(): ReadableWritablePair<string, string> {
+		const aborter = new AbortController();
 		return new TransformStream({
-			start: controller => this.onmessage = response => controller.enqueue(response),
+			start: controller => {
+				this.events.on('message', { signal: aborter.signal }, messageStr => controller.enqueue(messageStr));
+			},
 			transform: message => this.accept(message),
+			flush: () => aborter.abort(),
 		});
 	}
 }

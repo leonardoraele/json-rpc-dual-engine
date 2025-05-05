@@ -3,10 +3,11 @@ import { beforeEach, describe, it, mock } from 'node:test';
 import { JsonRpcServer } from './json-rpc-server.js';
 
 describe(JsonRpcServer.name, () => {
-	let server: JsonRpcServer;
-	let onresponse = mock.fn((_message: string) => {});
+	let server: JsonRpcServer<any>;
+	let responsehandler = mock.fn();
 
-	const getResponseRaw = () => onresponse.mock.calls.at(-1)!.arguments[0] as any;
+	const getResponseRaw = () => responsehandler.mock.calls.at(-1)?.arguments[0]
+		?? (() => { throw new Error('Expected the response event to be fired 1+ times, but it was not fired.'); })();
 	const getResponseParsed = () => JSON.parse(getResponseRaw());
 
 	const TEST_API = {
@@ -25,8 +26,9 @@ describe(JsonRpcServer.name, () => {
 	};
 
 	beforeEach(() => {
-		server = new JsonRpcServer({ api: TEST_API, onresponse });
-		onresponse.mock.resetCalls();
+		server = new JsonRpcServer(TEST_API);
+		server.events.on('response', responsehandler);
+		responsehandler.mock.resetCalls();
 	});
 
 	it('should call the correct API method and return the result', async () => {
@@ -77,7 +79,7 @@ describe(JsonRpcServer.name, () => {
 		};
 
 		await server.accept(request);
-		expect(onresponse.mock.calls).toHaveLength(0);
+		expect(responsehandler.mock.calls).toHaveLength(0);
 	});
 
 	it('should handle user errors thrown by API methods', async () => {

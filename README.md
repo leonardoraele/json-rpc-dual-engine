@@ -6,10 +6,10 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/leonardoraele/json-rpc-dual-engine)
 ![npm](https://img.shields.io/npm/dw/json-rpc-dual-engine)
 
-A zero-dependencies protocol agnostic implementation of the [JSON-RPC-2.0 spec].
+A protocol agnostic implementation of the [JSON-RPC-2.0 spec].
 
-This package includes a client and a server,
-but you can import either separately without increasing the size of your final build, if you don't need both.
+This package includes a client and a server.
+You can import either separately without increasing the size of your final build, if you don't need both.
 
 [JSON-RPC-2.0 spec]: https://www.jsonrpc.org/specification
 

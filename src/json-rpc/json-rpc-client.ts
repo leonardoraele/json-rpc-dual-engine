@@ -1,33 +1,41 @@
 import { IdCounter } from '#src/util/id-counter.js';
+import { SignalController } from 'signal-controller';
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
 
-export type RequestHandler = (request: string) => unknown;
-export type RemoteObject<T> = {
-	[K in keyof T]: T[K] extends (...args: any[]) => any
+export type RemoteObject<T extends BaseAPIType> = {
+	[K in keyof T]: T[K] extends BaseMethodType
 		? (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>
 		: never;
 };
 
-type PromiseFunctions = { resolve: (value: any) => void, reject: (reason: any) => void };
-export type MethodInterface = Record<string, (...args: any[]) => any>;
+export type BaseMethodType = (...args: any[]) => any;
+export type BaseAPIType = Record<string, BaseMethodType>;
 
-export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
+export interface JsonRpcClientOptions {
+	timeout?: number;
+}
+
+export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 	constructor({
 		timeout = 10000,
-		onrequest = undefined as RequestHandler|undefined,
-	} = {}) {
+	} = {} satisfies JsonRpcClientOptions) {
 		this.timeout = timeout;
-		this.onrequest = onrequest;
 	}
 
-	#idCounter = new IdCounter();
 	timeout: number;
-	onrequest: RequestHandler|undefined;
-	#pendingCalls: Record<string, PromiseFunctions> = {};
+	#idCounter = new IdCounter();
+	#pendingCalls: Record<string, PromiseWithResolvers<unknown>> = {};
 	#serverProxy?: any;
+	#controller = new SignalController<{
+		request(message: string): void;
+	}>();
 
-	get remote(): RemoteObject<API> {
+	get events() {
+		return this.#controller.signal;
+	}
+
+	get remote(): RemoteObject<APIType> {
 		return this.#serverProxy ??= new Proxy({}, {
 			get: (_target, method) => (...args: unknown[]) => {
 				if (typeof method === 'symbol') {
@@ -42,7 +50,7 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 		return this.#idCounter.next();
 	}
 
-	buildRequest<M extends keyof API & string>(method: M, params?: Parameters<API[M]>, { id = this.nextId() } = {}): string {
+	buildRequest<M extends keyof APIType & string>(method: M, params?: Parameters<APIType[M]>, { id = this.nextId() } = {}): string {
 		const requestObj: JsonRpcRequest = { jsonrpc: '2.0', id, method, params };
 		try {
 			return JSON.stringify(requestObj);
@@ -51,37 +59,20 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 		}
 	}
 
-	async sendRequest<M extends keyof API & string>(method: M, params?: Parameters<API[M]>): Promise<ReturnType<API[M]>> {
-		if (this.onrequest === undefined) {
-			throw new Error('Failed to send json-rpc request. Cause: No request handler set in the client.');
-		}
-
+	async sendRequest<MethodName extends keyof APIType>(method: MethodName, params?: Parameters<APIType[MethodName]>): Promise<ReturnType<APIType[MethodName]>> {
 		const id = this.nextId();
-		const requestStr = this.buildRequest(method, params, { id });
-
-		const resultPromise = new Promise((resolve, reject) => {
-			this.#pendingCalls[id] = { resolve, reject };
-			AbortSignal.timeout(this.timeout).addEventListener('abort', () => {
-				reject(new Error('Request timed out. (the server did not respond in time)'));
-			});
-		}).finally(() => {
-			delete this.#pendingCalls[id];
-		});
-
-		try {
-			await this.onrequest(requestStr);
-		} catch (e) {
-			this.#pendingCalls[id]?.reject(e);
-		}
-
-		return resultPromise as Promise<ReturnType<API[M]>>;
+		const requestStr = this.buildRequest(method as string, params, { id });
+		const resolvers = this.#pendingCalls[id] = Promise.withResolvers();
+		AbortSignal.timeout(this.timeout)
+			.addEventListener('abort', () =>
+				resolvers.reject(new Error('Request timed out. (the server did not respond in time)'))
+			);
+		resolvers.promise = resolvers.promise.finally(() => delete this.#pendingCalls[id]);
+		this.#controller.emit('request', requestStr);
+		return resolvers.promise as Promise<ReturnType<APIType[MethodName]>>;
 	}
 
 	async sendNotification(method: string, params: unknown[]): Promise<void> {
-		if (this.onrequest === undefined) {
-			throw new Error('Failed to send json-rpc request. Cause: No request handler set in the client.');
-		}
-
 		const requestObj: JsonRpcRequest = { jsonrpc: '2.0', method, params };
 		const requestStr = (() => {
 			try {
@@ -90,8 +81,7 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 				throw new Error('Failed to send json-rpc request. Cause: Failed to serialize request params.', { cause });
 			}
 		})();
-
-		await this.onrequest(requestStr);
+		this.#controller.emit('request', requestStr);
 	}
 
 	accept(message: unknown): void {
@@ -119,8 +109,16 @@ export class JsonRpcClient<API extends MethodInterface = Record<string, any>> {
 	}
 
 	toStream(): ReadableWritablePair<string, string> {
-		const readable = new ReadableStream<string>({ start: controller => this.onrequest = message => controller.enqueue(message) });
-		const writable = new WritableStream<string>({ write: message => this.accept(message) });
+		const aborter = new AbortController();
+		const readable = new ReadableStream<string>({
+			start: controller => {
+				this.events.on('request', { signal: aborter.signal }, requestStr => controller.enqueue(requestStr));
+			},
+			cancel: () => aborter.abort(),
+		});
+		const writable = new WritableStream<string>({
+			write: message => this.accept(message),
+		});
 		return { readable, writable };
 	}
 }

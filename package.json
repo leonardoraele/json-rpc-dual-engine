@@ -29,6 +29,9 @@
     "prebuild": "rimraf dist",
     "prepublish": "npm run build"
   },
+  "dependencies": {
+    "signal-controller": "^0.4.0"
+  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "expect": "^29.7.0",

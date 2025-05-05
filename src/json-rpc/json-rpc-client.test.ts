@@ -7,14 +7,7 @@ import { describe, beforeEach, it } from 'node:test';
 describe(JsonRpcClient.name, () => {
 	let client: JsonRpcClient;
 
-	beforeEach(() => {
-		client = new JsonRpcClient();
-	});
-
-	it('should throw an error if no request handler is set when sending a request', async () => {
-		client.onrequest = undefined;
-		await expect(() => client.sendRequest('testMethod')).rejects.toThrow();
-	});
+	beforeEach(() => client = new JsonRpcClient());
 
 	it('should build requests correctly', async () => {
 		const request = client.buildRequest('testMethod', ['param1', 'param2'], { id: 99 });
@@ -22,36 +15,36 @@ describe(JsonRpcClient.name, () => {
 	});
 
 	it('should send a request and receive a response', async () => {
-		client.onrequest = async (message: string) => {
+		client.events.on('request', (message: string) => {
 			const requestObj = JsonRpcRequest.parse(message);
 			expect(requestObj.method).toBe('testMethod');
 			expect(requestObj.params).toEqual(['param1', 'param2']);
 
 			queueMicrotask(() => client.accept(JSON.stringify({ jsonrpc: '2.0', id: requestObj.id, result: 'testResult' })));
-		};
+		});
 
 		await expect(client.sendRequest('testMethod', ['param1', 'param2'])).resolves.toBe('testResult');
 	});
 
 	it('should handle a notification', async () => {
-		client.onrequest = (message: string) => {
+		client.events.on('request', (message: string) => {
 			const requestObj = JsonRpcRequest.parse(message);
 			expect(requestObj.method).toBe('testNotification');
 			expect(requestObj.params).toEqual(['param1', 'param2']);
-		};
+		});
 
 		await client.sendNotification('testNotification', ['param1', 'param2']);
 	});
 
 	it('should handle a response with an error', async () => {
-		client.onrequest = async (request: string) => {
+		client.events.on('request', async (request: string) => {
 			const requestObj = JsonRpcRequest.parse(request);
 			expect(requestObj.method).toBe('testMethod');
 			expect(requestObj.params).toBe(undefined);
 			const responseObj: JsonRpcResponse = { jsonrpc: '2.0', id: requestObj.id!, error: { code: -32603, message: 'Internal error', data: 'Error data' } };
 
 			queueMicrotask(() => client.accept(JSON.stringify(responseObj)));
-		};
+		});
 
 		try {
 			await client.sendRequest('testMethod');

@@ -1,20 +1,22 @@
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcError } from './json-rpc-error.js';
 import { JsonRpcErrorResponse, JsonRpcResponse } from './json-rpc-response.js';
+import { SignalController } from 'signal-controller';
 
 export type ResponseHandler = (response: string) => unknown;
+export interface JsonRpcServerOptions {}
 
-export class JsonRpcServer {
-	constructor({
-		api = {} as object,
-		onresponse = undefined as ResponseHandler|undefined,
-	} = {}) {
-		this.api = api;
-		this.onresponse = onresponse;
+export class JsonRpcServer<T extends object> {
+	constructor(
+		public handler: T,
+		{} = {} satisfies JsonRpcServerOptions,
+	) {}
+
+	#controller = new SignalController<{ response(message: string): void }>();
+
+	get events() {
+		return this.#controller.signal;
 	}
-
-	api: object;
-	onresponse: ResponseHandler|undefined;
 
 	async accept(message: unknown): Promise<void> {
 		try {
@@ -36,7 +38,7 @@ export class JsonRpcServer {
 			: [request.params];
 		const result = await (async () => {
 			try {
-				return (await method.apply(this.api, params)) ?? null;
+				return (await method.apply(this.handler, params)) ?? null;
 			} catch (e) {
 				throw this.#buildUserError(e, request.id);
 			}
@@ -47,7 +49,7 @@ export class JsonRpcServer {
 		}
 	}
 
-	#findApiMethod(request: JsonRpcRequest, subject: any = this.api, methodName: string = ''): Function {
+	#findApiMethod(request: JsonRpcRequest, subject: any = this.handler, methodName: string = ''): Function {
 		// TODO Create an interface on method registration so that the user can optionally define the method parameters'
 		// types and we can validate them here. Invalid argument error has error code -32602
 		// Alternatively, should use JSON schema to validate the request params.
@@ -82,10 +84,6 @@ export class JsonRpcServer {
 	}
 
 	async #respond(response: JsonRpcResponse): Promise<void> {
-		if (this.onresponse === undefined) {
-			console.error('Server failed to emit json-rpc response. Cause: There is no response handler set on the server. The server is only capable of processing notification requests (method calls that don\'t expect a return).');
-			return;
-		}
 		const responseStr = (() => {
 			try {
 				return JSON.stringify(response);
@@ -93,7 +91,7 @@ export class JsonRpcServer {
 				throw this.#buildUserError(e, response.id);
 			}
 		})();
-		await this.onresponse(responseStr);
+		this.#controller.emit('response', responseStr);
 	}
 
 	#buildUserError(error: unknown, id: JsonRpcRequest['id']): Error {
@@ -126,9 +124,14 @@ export class JsonRpcServer {
 	}
 
 	toStream(): TransformStream<string, string> {
-		return new TransformStream({
-			start: (controller) => this.onresponse = message => controller.enqueue(message),
+		const aborter = new AbortController();
+		const stream =  new TransformStream({
+			start: controller => {
+				this.events.on('response', { signal: aborter.signal }, responseStr => controller.enqueue(responseStr));
+			},
 			transform: chunk => this.accept(chunk),
+			flush: () => aborter.abort(),
 		});
+		return stream;
 	}
 }
