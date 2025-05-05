@@ -27,7 +27,7 @@
     "test": "node --import=tsx --test **/*.ts",
     "build": "tsc",
     "prebuild": "rimraf dist",
-    "prepublish": "npm run build"
+    "prepack": "npm run build"
   },
   "dependencies": {
     "signal-controller": "^0.4.0"
