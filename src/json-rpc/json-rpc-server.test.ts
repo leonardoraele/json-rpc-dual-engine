@@ -3,7 +3,7 @@ import { beforeEach, describe, it, mock } from 'node:test';
 import { JsonRpcServer } from './json-rpc-server.js';
 
 describe(JsonRpcServer.name, () => {
-	let server: JsonRpcServer<any>;
+	let server: JsonRpcServer;
 	let responsehandler = mock.fn();
 
 	const getResponseRaw = () => responsehandler.mock.calls.at(-1)?.arguments[0]

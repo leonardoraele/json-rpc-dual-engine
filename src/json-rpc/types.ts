@@ -1,4 +1,4 @@
-import type { JSONEntry as JSONValue } from 'json-types';
+import { JSONEntry as JSONValue } from 'json-types';
 
 export type LoggerType = (message: string) => void;
 export type TransportType = (message: string) => void;

@@ -4,20 +4,20 @@ import { JsonRpcResponse } from './json-rpc-response.js';
 import { JsonRpcServer, JsonRpcServerOptions } from './json-rpc-server.js';
 import { BaseAPIType } from './types.js';
 
-export class JsonRpcDualEngine<LocalAPIType extends BaseAPIType, RemoteAPIType extends BaseAPIType = BaseAPIType> {
-	constructor(handler: LocalAPIType, options?: JsonRpcServerOptions & JsonRpcClientOptions) {
+export class JsonRpcDualEngine<RemoteAPIType extends BaseAPIType = BaseAPIType> {
+	constructor(handler: object, options?: JsonRpcServerOptions & JsonRpcClientOptions) {
 		this.server = new JsonRpcServer(handler, options);
 		this.client = new JsonRpcClient(options);
 	}
 
-	readonly server: JsonRpcServer<LocalAPIType>;
+	readonly server: JsonRpcServer;
 	readonly client: JsonRpcClient<RemoteAPIType>;
 
-	get transport(): JsonRpcClient['transport'] & JsonRpcServer<any>['transport'] {
+	get transport(): JsonRpcClient['transport'] & JsonRpcServer['transport'] {
 		return this.client.transport || this.server.transport;
 	}
 
-	set transport(transport: JsonRpcClient['transport'] & JsonRpcServer<any>['transport']) {
+	set transport(transport: JsonRpcClient['transport'] & JsonRpcServer['transport']) {
 		this.client.transport = this.server.transport = transport;
 	}
 

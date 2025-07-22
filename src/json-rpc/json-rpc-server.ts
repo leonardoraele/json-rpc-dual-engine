@@ -10,9 +10,9 @@ export interface JsonRpcServerOptions {
 	logger?: LoggerType|null|undefined;
 }
 
-export class JsonRpcServer<ApiType extends object> {
+export class JsonRpcServer {
 	constructor(
-		public handler: ApiType,
+		public handler: object,
 		{
 			transport,
 			logger = console.error,
