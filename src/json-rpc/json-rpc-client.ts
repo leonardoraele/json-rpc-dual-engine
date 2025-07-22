@@ -2,7 +2,7 @@ import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
 import { nanoid } from 'nanoid';
 import type { JSONMap as JSONObject, JSONEntry as JSONValue } from 'json-types';
-import { LoggerType, TransportType } from './types.js';
+import { BaseAPIType, LoggerType, TransportType } from './types.js';
 
 export type RemoteAPI<APIType extends BaseAPIType> = {
 	[MethodName in keyof APIType]: (...params: Parameters<APIType[MethodName]>)
@@ -15,10 +15,6 @@ export interface JsonRpcClientOptions {
 	timeout?: number|undefined;
 	transport?: TransportType|undefined;
 	logger?: LoggerType|null|undefined;
-}
-
-export interface BaseAPIType {
-	[method: string]: (...params: JSONValue[]) => JSONValue;
 }
 
 export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {

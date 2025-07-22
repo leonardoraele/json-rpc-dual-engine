@@ -1,7 +1,8 @@
-import { JsonRpcClient, BaseAPIType, JsonRpcClientOptions } from './json-rpc-client.js';
+import { JsonRpcClient, JsonRpcClientOptions } from './json-rpc-client.js';
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcResponse } from './json-rpc-response.js';
 import { JsonRpcServer, JsonRpcServerOptions } from './json-rpc-server.js';
+import { BaseAPIType } from './types.js';
 
 export class JsonRpcDualEngine<LocalAPIType extends BaseAPIType, RemoteAPIType extends BaseAPIType = BaseAPIType> {
 	constructor(handler: LocalAPIType, options?: JsonRpcServerOptions & JsonRpcClientOptions) {
