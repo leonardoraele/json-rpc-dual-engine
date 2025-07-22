@@ -1,22 +1,29 @@
 import { JsonRpcRequest } from './json-rpc-request.js';
 import { JsonRpcError } from './json-rpc-error.js';
 import { JsonRpcErrorResponse, JsonRpcResponse } from './json-rpc-response.js';
-import { SignalController } from 'signal-controller';
+import { JSONEntry as JSONValue } from 'json-types';
+import { LoggerType, TransportType } from './types.js';
 
 export type ResponseHandler = (response: string) => unknown;
-export interface JsonRpcServerOptions {}
+export interface JsonRpcServerOptions {
+	transport?: TransportType|undefined;
+	logger?: LoggerType|null|undefined;
+}
 
-export class JsonRpcServer<T extends object> {
+export class JsonRpcServer<ApiType extends object> {
 	constructor(
-		public handler: T,
-		{} = {} satisfies JsonRpcServerOptions,
-	) {}
-
-	#controller = new SignalController<{ response(message: string): void }>();
-
-	get events() {
-		return this.#controller.signal;
+		public handler: ApiType,
+		{
+			transport,
+			logger = console.error,
+		}: JsonRpcServerOptions = {},
+	) {
+		this.transport = transport;
+		this.logger = logger;
 	}
+
+	public transport?: TransportType|undefined;
+	public logger: LoggerType|null;
 
 	async accept(message: unknown): Promise<void> {
 		try {
@@ -91,12 +98,12 @@ export class JsonRpcServer<T extends object> {
 				throw this.#buildUserError(e, response.id);
 			}
 		})();
-		this.#controller.emit('response', responseStr);
+		this.transport?.(responseStr);
 	}
 
 	#buildUserError(error: unknown, id: JsonRpcRequest['id']): Error {
 		const timestamp = new Date().toISOString();
-		console.error('An error occured while processing a user request.', timestamp, 'request id:', id, 'error:', error);
+		this.logger?.(`An error occured while processing a user request. ${JSON.stringify({ cause: { timestamp, id, error } })}`);
 		if (error instanceof JsonRpcError) {
 			return error;
 		}
@@ -116,7 +123,7 @@ export class JsonRpcServer<T extends object> {
 						message: error.message,
 						cause: error.cause,
 						stack: error.stack,
-					}
+					} as JSONValue
 					: { error: String(error) },
 			},
 			id: id ?? null,
@@ -124,14 +131,15 @@ export class JsonRpcServer<T extends object> {
 	}
 
 	toStream(): TransformStream<string, string> {
-		const aborter = new AbortController();
-		const stream =  new TransformStream({
-			start: controller => {
-				this.events.on('response', { signal: aborter.signal }, responseStr => controller.enqueue(responseStr));
-			},
+		let localTransport: TransportType|undefined = undefined;
+		return new TransformStream({
+			start: controller => localTransport = this.transport = message => controller.enqueue(message),
 			transform: chunk => this.accept(chunk),
-			flush: () => aborter.abort(),
+			flush: () => {
+				if (this.transport === localTransport) {
+					this.transport = undefined;
+				}
+			},
 		});
-		return stream;
 	}
 }

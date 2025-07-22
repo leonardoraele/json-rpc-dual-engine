@@ -15,36 +15,36 @@ describe(JsonRpcClient.name, () => {
 	});
 
 	it('should send a request and receive a response', async () => {
-		client.events.on('request', (message: string) => {
+		client.transport = (message: string) => {
 			const requestObj = JsonRpcRequest.parse(message);
 			expect(requestObj.method).toBe('testMethod');
 			expect(requestObj.params).toEqual(['param1', 'param2']);
 
 			queueMicrotask(() => client.accept(JSON.stringify({ jsonrpc: '2.0', id: requestObj.id, result: 'testResult' })));
-		});
+		};
 
 		await expect(client.sendRequest('testMethod', ['param1', 'param2'])).resolves.toBe('testResult');
 	});
 
 	it('should handle a notification', async () => {
-		client.events.on('request', (message: string) => {
+		client.transport = (message: string) => {
 			const requestObj = JsonRpcRequest.parse(message);
 			expect(requestObj.method).toBe('testNotification');
 			expect(requestObj.params).toEqual(['param1', 'param2']);
-		});
+		};
 
 		await client.sendNotification('testNotification', ['param1', 'param2']);
 	});
 
 	it('should handle a response with an error', async () => {
-		client.events.on('request', async (request: string) => {
-			const requestObj = JsonRpcRequest.parse(request);
+		client.transport = (message: string) => {
+			const requestObj = JsonRpcRequest.parse(message);
 			expect(requestObj.method).toBe('testMethod');
 			expect(requestObj.params).toBe(undefined);
 			const responseObj: JsonRpcResponse = { jsonrpc: '2.0', id: requestObj.id!, error: { code: -32603, message: 'Internal error', data: 'Error data' } };
 
 			queueMicrotask(() => client.accept(JSON.stringify(responseObj)));
-		});
+		};
 
 		try {
 			await client.sendRequest('testMethod');
@@ -54,10 +54,8 @@ describe(JsonRpcClient.name, () => {
 		}
 	});
 
-	it('should handle a response with an unexpected id', t => {
+	it('should handle a response with an unexpected id', () => {
 		const responseObj: JsonRpcResponse = { jsonrpc: '2.0', id: 'unexpectedId', result: 'testResult' };
-		const { mock } = t.mock.method(console, 'error', () => {});
-		client.accept(JSON.stringify(responseObj));
-		expect(mock.calls).toHaveLength(1);
+		expect(() => client.accept(JSON.stringify(responseObj))).toThrowError();
 	});
 });

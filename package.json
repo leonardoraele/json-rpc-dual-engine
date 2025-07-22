@@ -30,11 +30,10 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "nanoid": "^5.1.5",
-    "signal-controller": "^0.4.0"
+    "nanoid": "^5.1.5"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.16.5",
     "expect": "^29.7.0",
     "json-types": "^1.0.2",
     "rimraf": "^6.0.1",

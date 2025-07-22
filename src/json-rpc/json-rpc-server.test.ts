@@ -27,7 +27,7 @@ describe(JsonRpcServer.name, () => {
 
 	beforeEach(() => {
 		server = new JsonRpcServer(TEST_API);
-		server.events.on('response', responsehandler);
+		server.transport = responsehandler;
 		responsehandler.mock.resetCalls();
 	});
 
@@ -124,17 +124,17 @@ describe(JsonRpcServer.name, () => {
 			},
 		});
 		const stream = server.toStream();
-		const output = new WritableStream<string>({
-			start() {
-				this.chunks = [];
-			},
-			write(chunk) {
-				this.chunks.push(chunk);
-			},
-			close() {
-				expect(this.chunks).toEqual([JSON.stringify({ jsonrpc: '2.0', result: 'pong', id: 1 })])
-			},
-		});
+		const output = (() => {
+			let chunks: unknown[] = [];
+			return new WritableStream<string>({
+				write(chunk) {
+					chunks.push(chunk);
+				},
+				close() {
+					expect(chunks).toEqual([JSON.stringify({ jsonrpc: '2.0', result: 'pong', id: 1 })]);
+				},
+			});
+		})();
 
 		expect.assertions(1);
 

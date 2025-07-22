@@ -1,3 +1,4 @@
+import { JSONEntry as JSONValue } from 'json-types';
 import { JsonRpcError } from './json-rpc-error.js';
 
 export type JsonRpcRequest = {
@@ -78,7 +79,7 @@ export namespace JsonRpcRequest {
 						code: -32600,
 						message: 'Server received an invalid JSON-RPC-2.0 Request object: '
 							+ 'If present, property "id" must be a string, a number, or null.',
-						data: { providedId: id },
+						data: { providedId: id as JSONValue },
 					},
 					id: null,
 				});
@@ -104,7 +105,7 @@ export namespace JsonRpcRequest {
 					code: -32600,
 					message: 'Server received an invalid JSON-RPC-2.0 Request object: '
 						+ 'Expected property "method" to be a string',
-					data: { method },
+					data: { method } as JSONValue,
 				},
 				id: id ?? null,
 			});
@@ -117,7 +118,7 @@ export namespace JsonRpcRequest {
 					code: -32600,
 					message: 'Server received an invalid JSON-RPC-2.0 Request object: '
 						+ 'If present, property "params" must be an array or an object.',
-					data: { params },
+					data: { params } as JSONValue,
 				},
 				id: id ?? null,
 			});

@@ -1,14 +1,16 @@
+import type { JSONEntry as JSONValue } from 'json-types';
+
 export type JsonRpcResponse = JsonRpcSuccessResponse|JsonRpcErrorResponse;
 
 export type JsonRpcSuccessResponse = {
 	jsonrpc: '2.0',
-	result: unknown,
+	result: JSONValue,
 	id: string|number|null,
 };
 
 export type JsonRpcErrorResponse = {
 	jsonrpc: '2.0',
-	error: { code: number, message: string, data?: unknown },
+	error: { code: number, message: string, data?: JSONValue|undefined },
 	id: string|number|null,
 };
 
@@ -35,7 +37,7 @@ export namespace JsonRpcResponse {
 		}
 
 		if ('result' in subject) {
-			return markSuccess({ jsonrpc: '2.0', result: subject.result, id: subject.id });
+			return markSuccess({ jsonrpc: '2.0', result: subject.result as JSONValue, id: subject.id });
 		}
 
 		if (!('error' in subject) || typeof subject.error !== 'object' || subject.error === null) {
@@ -56,7 +58,7 @@ export namespace JsonRpcResponse {
 				code: subject.error.code,
 				message: subject.error.message,
 				data: 'data' in subject.error
-					? subject.error.data
+					? subject.error.data as JSONValue
 					: undefined,
 			},
 			id: subject.id
