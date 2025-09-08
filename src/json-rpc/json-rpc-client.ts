@@ -11,6 +11,10 @@ export type RemoteAPI<APIType extends BaseAPIType> = {
 			: Promise<ReturnType<APIType[MethodName]>>;
 };
 
+export type NotificationsAPI<APIType extends BaseAPIType> = {
+	[MethodName in keyof APIType]: (...params: Parameters<APIType[MethodName]>) => void;
+};
+
 export interface JsonRpcClientOptions {
 	timeout?: number|undefined;
 	transport?: TransportType|undefined;
@@ -32,15 +36,27 @@ export class JsonRpcClient<APIType extends BaseAPIType = BaseAPIType> {
 	public transport?: TransportType|undefined;
 	public logger: LoggerType|null;
 	#pendingCalls: Record<string, PromiseWithResolvers<JSONValue>> = {};
-	#serverProxy?: any;
+	#serverRequestProxy?: any;
+	#serverNotificationProxy?: any;
 
 	get remote(): RemoteAPI<APIType> {
-		return this.#serverProxy ??= new Proxy({}, {
+		return this.#serverRequestProxy ??= new Proxy({}, {
 			get: (_target, method) => (...args: unknown[]) => {
 				if (typeof method === 'symbol') {
 					throw new Error('Failed to send json-rpc request. Cause: Invalid method name.', { cause: { method } });
 				}
 				return this.sendRequest(method, args as any);
+			}
+		});
+	}
+
+	get notifications(): NotificationsAPI<APIType> {
+		return this.#serverNotificationProxy ??= new Proxy({}, {
+			get: (_target, method) => (...args: unknown[]) => {
+				if (typeof method === 'symbol') {
+					throw new Error('Failed to send json-rpc request. Cause: Invalid method name.', { cause: { method } });
+				}
+				this.sendNotification(method, args as any);
 			}
 		});
 	}
